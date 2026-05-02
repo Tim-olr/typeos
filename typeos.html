@@ -508,7 +508,7 @@ body.font-wing { font-family: "Verdana", monospace; }
       </div>
       <!-- Keycaps section -->
       <div class="card">
-        <h3>KEYCAPS (<span id="capCount">0</span>/<span id="capMax">8</span>)</h3>
+        <h3>KEYCAPS (<span id="capCount">0</span>)</h3>
         <div class="list" id="keycapList"><div class="muted">No keycaps yet.</div></div>
       </div>
       <!-- Log section -->
@@ -741,7 +741,7 @@ function addFKey(id, log_=true) {
   return true;
 }
 function addKeycap(capId, letter) {
-  if (state.keycaps.length >= 8) { log('No keycap slots free!','warn'); return false; }
+  if (getCapsForLetter(letter).length > 0) { log(`[${letter}] already has a keycap!`,'warn'); return false; }
   state.keycaps.push({ capId, letter });
   log(`+ Keycap installed: ${KEYCAPS[capId].name} on [${letter}]`,'good');
   return true;
@@ -991,6 +991,10 @@ function handleCapsLock() {
   if (state.manager.id === 'roberta') { log('Roberta forbids capitals.','bad'); return; }
   if (!state.capsLockActive && state.capsCharges <= 0) { log('No caps charges!','bad'); return; }
   state.capsLockActive = !state.capsLockActive;
+  if (!state.capsLockActive && state.capsThisWord.some(m => m === 'caps')) {
+    state.capsCharges -= 1;
+    if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
+  }
   state.shiftActive = false; // cancel shift when toggling caps
   renderWord();
 }
@@ -1033,11 +1037,9 @@ function submitWord() {
     log(blockedReason || `"${word}" — not a valid word. Letters consumed.`,'bad');
     flashScore(0, true);
     state.turnsLeft--;
-    state.word=''; state.capsThisWord=[]; state.shiftActive=false;
-    if (state.capsLockActive) {
-      state.capsCharges -= 1;
-      if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
-      state.capsLockActive = false;
+    { const capsWasUsed = state.capsLockActive || state.capsThisWord.some(m => m === 'caps');
+      state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+      if (capsWasUsed) { state.capsCharges -= 1; if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn'); state.capsLockActive = false; }
     }
     afterWordCleanup();
     renderAll();
@@ -1065,11 +1067,9 @@ function submitWord() {
     state.streak = 0;
     state.flawless = false;
     state.turnsLeft--;
-    state.word=''; state.capsThisWord=[]; state.shiftActive=false;
-    if (state.capsLockActive) {
-      state.capsCharges -= 1;
-      if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
-      state.capsLockActive = false;
+    { const capsWasUsed = state.capsLockActive || state.capsThisWord.some(m => m === 'caps');
+      state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+      if (capsWasUsed) { state.capsCharges -= 1; if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn'); state.capsLockActive = false; }
     }
     afterWordCleanup();
     renderAll();
@@ -1195,11 +1195,9 @@ function submitWord() {
   log(`"${word}" → ${finalScore} ${detailLog.length?'['+detailLog.join(', ')+']':''}`,'good');
   flashScore(finalScore, false);
 
-  state.word=''; state.capsThisWord=[]; state.shiftActive=false;
-  if (state.capsLockActive) {
-    state.capsCharges -= 1;
-    if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
-    state.capsLockActive = false;
+  { const capsWasUsed = state.capsLockActive || state.capsThisWord.some(m => m === 'caps');
+    state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+    if (capsWasUsed) { state.capsCharges -= 1; if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn'); state.capsLockActive = false; }
   }
   state.turnsLeft--;
   afterWordCleanup();
@@ -1376,7 +1374,7 @@ function showShop() {
     capChoices.forEach((id,i) => {
       const c = KEYCAPS[id];
       const tag = 'shop-cap-'+i;
-      const can = state.money >= c.cost && state.keycaps.length < 8;
+      const can = state.money >= c.cost;
       html += `<div class="shop-item keycap ${can?'':'cant-afford'} ${purchased.has(tag)?'purchased':''}">
         <div class="item-name">${c.name}</div>
         <div class="item-desc">${c.desc}</div>
@@ -1455,7 +1453,6 @@ function showShop() {
     document.querySelectorAll('[data-buy-cap]').forEach(b => b.onclick = () => {
       const id = b.dataset.buyCap; const tag = b.dataset.tag;
       const c = KEYCAPS[id]; if (state.money < c.cost) return;
-      if (state.keycaps.length >= 8) { log('No cap slots free','warn'); return; }
       assignCapModal(id, () => {
         state.money -= c.cost;
         purchased.add(tag); renderShop();
@@ -1551,14 +1548,17 @@ function assignCapModal(capId, onPlaced) {
   pushModal('INSTALL ' + c.name.toUpperCase(), html);
   const grid = document.getElementById('assignGrid');
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const hasCap = getCapsForLetter(L).length > 0;
     const div = document.createElement('div');
-    div.className = 'assign-letter' + (getCapsForLetter(L).length?' has-cap':'');
+    div.className = 'assign-letter' + (hasCap ? ' has-cap disabled' : '');
     div.textContent = L;
-    div.addEventListener('click', () => {
-      addKeycap(capId, L);
-      popModal();
-      onPlaced && onPlaced();
-    });
+    if (!hasCap) {
+      div.addEventListener('click', () => {
+        addKeycap(capId, L);
+        popModal();
+        onPlaced && onPlaced();
+      });
+    }
     grid.appendChild(div);
   });
   document.getElementById('cancelAssign').onclick = () => popModal();
@@ -1619,7 +1619,7 @@ function openPack(pack, onDone) {
   function assignFromPack(capId) {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     letters.sort((a,b) => (state.letters[b]||0) - (state.letters[a]||0));
-    const L = letters[0] || 'E';
+    const L = letters.find(l => getCapsForLetter(l).length === 0) || letters[0] || 'E';
     addKeycap(capId, L);
   }
   render();
