@@ -934,24 +934,18 @@ function handleKeyPress(L) {
   // Determine if this letter should be capitalised
   // Shift takes precedence over caps lock when both are active
   const useShift = state.shiftActive && state.shiftCharges > 0;
-  const useCaps = !useShift && state.capsLockActive && state.capsCharges > 0;
+  const useCaps = !useShift && state.capsLockActive;
   const capitalise = useShift || useCaps;
 
   if (!isInfinite) state.letters[L] = have - 1;
   state.word += L;
-  // Track which mode capitalised this letter for refund on backspace
+  // Track which mode capitalised this letter (used for scoring and backspace refunds)
   state.capsThisWord.push(useShift ? 'shift' : useCaps ? 'caps' : '');
 
   // Deduct the appropriate charge when the letter is actually typed capitalised
   if (useShift) {
     state.shiftCharges -= 1;
     state.shiftActive = false; // shift is one-shot
-  } else if (useCaps) {
-    state.capsCharges -= 1;
-    if (state.capsCharges <= 0) {
-      state.capsLockActive = false; // auto-off when charges depleted
-      log('Caps charges depleted — CAPS OFF.', 'warn');
-    }
   } else if (state.shiftActive) {
     // shiftActive but no charges (e.g. physical shift key bypass); cancel shift silently
     state.shiftActive = false;
@@ -969,7 +963,6 @@ function handleBackspace() {
   if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
   const mode = state.capsThisWord[idx];
   if (mode === 'shift') state.shiftCharges = (state.shiftCharges || 0) + 1;
-  else if (mode === 'caps') state.capsCharges = (state.capsCharges || 0) + 1;
   state.word = state.word.slice(0, -1);
   state.capsThisWord.pop();
   renderWord();
@@ -981,7 +974,6 @@ function handleClear() {
     const isInfinite = (L === 'E' && hasFKey('eKey'));
     if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
     if (state.capsThisWord[i] === 'shift') state.shiftCharges = (state.shiftCharges || 0) + 1;
-    else if (state.capsThisWord[i] === 'caps') state.capsCharges = (state.capsCharges || 0) + 1;
   }
   state.word = '';
   state.capsThisWord = [];
@@ -1042,6 +1034,11 @@ function submitWord() {
     flashScore(0, true);
     state.turnsLeft--;
     state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+    if (state.capsLockActive) {
+      state.capsCharges -= 1;
+      if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
+      state.capsLockActive = false;
+    }
     afterWordCleanup();
     renderAll();
     checkDayEnd();
@@ -1069,6 +1066,11 @@ function submitWord() {
     state.flawless = false;
     state.turnsLeft--;
     state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+    if (state.capsLockActive) {
+      state.capsCharges -= 1;
+      if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
+      state.capsLockActive = false;
+    }
     afterWordCleanup();
     renderAll();
     checkDayEnd();
@@ -1194,6 +1196,11 @@ function submitWord() {
   flashScore(finalScore, false);
 
   state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+  if (state.capsLockActive) {
+    state.capsCharges -= 1;
+    if (state.capsCharges <= 0) log('Caps charges depleted — CAPS OFF.', 'warn');
+    state.capsLockActive = false;
+  }
   state.turnsLeft--;
   afterWordCleanup();
   renderAll();
