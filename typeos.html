@@ -932,6 +932,7 @@ function handleKeyPress(L) {
   if (state.word.length >= 25) return;
 
   // Determine if this letter should be capitalised
+  // Shift takes precedence over caps lock when both are active
   const useShift = state.shiftActive && state.shiftCharges > 0;
   const useCaps = !useShift && state.capsLockActive && state.capsCharges > 0;
   const capitalise = useShift || useCaps;
@@ -952,7 +953,7 @@ function handleKeyPress(L) {
       log('Caps charges depleted — CAPS OFF.', 'warn');
     }
   } else if (state.shiftActive) {
-    // shiftActive but no charges; cancel shift
+    // shiftActive but no charges (e.g. physical shift key bypass); cancel shift silently
     state.shiftActive = false;
   }
 
