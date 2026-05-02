@@ -644,6 +644,13 @@ const PACKS = [
   { id:'med_cap', name:'Medium Keycap Bag', desc:'5 keycaps, choose 1.', cost:8, kind:'cap', show:5, pick:1 }
 ];
 
+const CONSUMABLES = [
+  { id:'shift_charges_3', name:'Shift Ink ×3', desc:'+3 shift charges.', cost:2, kind:'shift', amount:3 },
+  { id:'shift_charges_6', name:'Shift Ink ×6', desc:'+6 shift charges.', cost:3, kind:'shift', amount:6 },
+  { id:'caps_charges_3', name:'Caps Ink ×3', desc:'+3 caps charges.', cost:2, kind:'caps', amount:3 },
+  { id:'caps_charges_6', name:'Caps Ink ×6', desc:'+6 caps charges.', cost:3, kind:'caps', amount:6 }
+];
+
 // =============== STATE ===============
 let state = null;
 
@@ -654,6 +661,7 @@ function defaultState() {
     score: 0,
     quota: 100,
     shiftCharges: 2,
+    capsCharges: 2,
     turnsLeft: 6,
     letters: {},
     chips: {},
@@ -819,14 +827,16 @@ function renderWord() {
     sb.textContent = `⇧ SHIFT (${state.shiftCharges})`;
     sb.style.background = state.shiftActive ? 'var(--gold-text)' : 'var(--os-interface)';
     sb.style.color = state.shiftActive ? '#000' : 'var(--gold-text)';
+    sb.disabled = !state.shiftActive && state.shiftCharges <= 0;
   }
 
   // Caps Lock button — now exists in HTML
   const cb = document.getElementById('capsBtn');
   if (cb) {
-    cb.textContent = `⇪ CAPS${state.capsLockActive ? ' ON' : ' OFF'}`;
+    cb.textContent = `⇪ CAPS${state.capsLockActive ? ' ON' : ' OFF'} (${state.capsCharges})`;
     cb.style.background = state.capsLockActive ? 'var(--gold-text)' : 'var(--os-interface)';
     cb.style.color = state.capsLockActive ? '#000' : 'var(--gold-text)';
+    cb.disabled = !state.capsLockActive && state.capsCharges <= 0;
   }
 
   // hint
@@ -922,14 +932,30 @@ function handleKeyPress(L) {
   if (state.word.length >= 25) return;
 
   // Determine if this letter should be capitalised
-  const capitalise = state.shiftActive || state.capsLockActive;
+  // Shift takes precedence over caps lock when both are active
+  const useShift = state.shiftActive && state.shiftCharges > 0;
+  const useCaps = !useShift && state.capsLockActive && state.capsCharges > 0;
+  const capitalise = useShift || useCaps;
 
   if (!isInfinite) state.letters[L] = have - 1;
   state.word += L;
-  state.capsThisWord.push(capitalise);
+  // Track which mode capitalised this letter for refund on backspace
+  state.capsThisWord.push(useShift ? 'shift' : useCaps ? 'caps' : '');
 
-  // Shift is one-shot; caps lock persists
-  if (state.shiftActive) state.shiftActive = false;
+  // Deduct the appropriate charge when the letter is actually typed capitalised
+  if (useShift) {
+    state.shiftCharges -= 1;
+    state.shiftActive = false; // shift is one-shot
+  } else if (useCaps) {
+    state.capsCharges -= 1;
+    if (state.capsCharges <= 0) {
+      state.capsLockActive = false; // auto-off when charges depleted
+      log('Caps charges depleted — CAPS OFF.', 'warn');
+    }
+  } else if (state.shiftActive) {
+    // shiftActive but no charges (e.g. physical shift key bypass); cancel shift silently
+    state.shiftActive = false;
+  }
 
   renderWord();
   renderKeyboard();
@@ -941,7 +967,9 @@ function handleBackspace() {
   const L = state.word[idx].toUpperCase();
   const isInfinite = (L === 'E' && hasFKey('eKey'));
   if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
-  if (state.capsThisWord[idx]) state.shiftCharges = (state.shiftCharges || 0) + 1;
+  const mode = state.capsThisWord[idx];
+  if (mode === 'shift') state.shiftCharges = (state.shiftCharges || 0) + 1;
+  else if (mode === 'caps') state.capsCharges = (state.capsCharges || 0) + 1;
   state.word = state.word.slice(0, -1);
   state.capsThisWord.pop();
   renderWord();
@@ -952,7 +980,8 @@ function handleClear() {
     const L = state.word[i].toUpperCase();
     const isInfinite = (L === 'E' && hasFKey('eKey'));
     if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
-    if (state.capsThisWord[i]) state.shiftCharges = (state.shiftCharges || 0) + 1;
+    if (state.capsThisWord[i] === 'shift') state.shiftCharges = (state.shiftCharges || 0) + 1;
+    else if (state.capsThisWord[i] === 'caps') state.capsCharges = (state.capsCharges || 0) + 1;
   }
   state.word = '';
   state.capsThisWord = [];
@@ -962,12 +991,13 @@ function handleClear() {
 }
 function handleShift() {
   if (state.manager.id === 'roberta') { log('Roberta forbids capitals.','bad'); return; }
+  if (!state.shiftActive && state.shiftCharges <= 0) { log('No shift charges!','bad'); return; }
   state.shiftActive = !state.shiftActive;
-  state.shiftCharges -= 1
   renderWord();
 }
 function handleCapsLock() {
   if (state.manager.id === 'roberta') { log('Roberta forbids capitals.','bad'); return; }
+  if (!state.capsLockActive && state.capsCharges <= 0) { log('No caps charges!','bad'); return; }
   state.capsLockActive = !state.capsLockActive;
   state.shiftActive = false; // cancel shift when toggling caps
   renderWord();
@@ -1303,6 +1333,8 @@ function showShop() {
   const capChoices = pickRandomCaps(2);
   const chipChoices = pickRandomChips(3);
   const packChoices = [...PACKS].sort(()=>Math.random()-0.5).slice(0,4);
+  // Randomly offer 0-2 consumables (shift or caps charges)
+  const consumableChoices = [...CONSUMABLES].sort(()=>Math.random()-0.5).slice(0, Math.random() < 0.5 ? 2 : 1);
 
   const purchased = new Set();
 
@@ -1380,6 +1412,23 @@ function showShop() {
     });
     html += '</div></div>';
 
+    if (consumableChoices.length) {
+      html += `<div class="card" style="margin-top:8px;"><h3>CONSUMABLES</h3><div class="shop-grid">`;
+      consumableChoices.forEach((c,i) => {
+        const tag = 'shop-cons-'+i;
+        const can = state.money >= c.cost;
+        html += `<div class="shop-item pack ${can?'':'cant-afford'}">
+          <div class="item-name">${c.name}</div>
+          <div class="item-desc">${c.desc}</div>
+          <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+            <div class="item-cost">$${c.cost}</div>
+            <button class="btn small" data-buy-cons="${i}" ${!can?'disabled':''}>BUY</button>
+          </div>
+        </div>`;
+      });
+      html += '</div></div>';
+    }
+
     html += `
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
         <button class="btn" id="shopRerollBtn">REROLL ($${rerollCost()})</button>
@@ -1421,6 +1470,20 @@ function showShop() {
       purchased.add(tag);
       openPack(pack, () => renderShop());
     });
+    document.querySelectorAll('[data-buy-cons]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.buyCons;
+      const cons = consumableChoices[i];
+      if (state.money < cons.cost) return;
+      state.money -= cons.cost;
+      if (cons.kind === 'shift') {
+        state.shiftCharges = (state.shiftCharges || 0) + cons.amount;
+        log(`Bought ${cons.name}: +${cons.amount} shift charges.`, 'good');
+      } else if (cons.kind === 'caps') {
+        state.capsCharges = (state.capsCharges || 0) + cons.amount;
+        log(`Bought ${cons.name}: +${cons.amount} caps charges.`, 'good');
+      }
+      renderShop();
+    });
     document.getElementById('shopRerollBtn').onclick = () => {
       const c = rerollCost();
       if (state.money < c) { log('Not enough $','warn'); return; }
@@ -1430,6 +1493,7 @@ function showShop() {
       const c1 = pickRandomCaps(2); capChoices.length = 0; capChoices.push(...c1);
       const ch1 = pickRandomChips(3); chipChoices.length = 0; chipChoices.push(...ch1);
       const p1 = [...PACKS].sort(()=>Math.random()-0.5).slice(0,4); packChoices.length=0; packChoices.push(...p1);
+      const con1 = [...CONSUMABLES].sort(()=>Math.random()-0.5).slice(0, Math.random() < 0.5 ? 2 : 1); consumableChoices.length=0; consumableChoices.push(...con1);
       purchased.clear();
       renderShop();
     };
