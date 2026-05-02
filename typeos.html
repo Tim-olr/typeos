@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TYORUA — The Company</title>
+<style>
+:root {
+  --stone: #322e28;
+  --stone-light: #7a6e60;
+  --stone-dark: #1a1610;
+  --os-interface: #3f3830;
+  --gold-text: #ffbe10;
+  --ink: #ddd8cc;
+  --bad: #ff6060;
+  --good: #2ecc71;
+  --info: #7fdbff;
+  --warn: #ff9030;
+  --purple: #bb99ff;
+  --glow: rgba(255,190,16,0.25);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #000; color: var(--ink);
+  font-family: "Verdana", "Courier New", monospace;
+  user-select: none;
+}
+body.font-tnr { font-family: "Times New Roman", serif; }
+body.font-comic { font-family: "Comic Sans MS", cursive; }
+body.font-courier { font-family: "Courier New", monospace; }
+body.font-georgia { font-family: Georgia, serif; }
+body.font-impact { font-family: Impact, sans-serif; }
+body.font-wing { font-family: "Verdana", monospace; }
+
+.crt {
+  position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    rgba(255,255,255,0.03), rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.85));
+  mix-blend-mode: screen; opacity: 0.25; z-index: 50;
+}
+.scanlines {
+  position: fixed; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+    rgba(0,0,0,0), rgba(0,0,0,0) 2px, rgba(0,0,0,0.2) 3px);
+  opacity: 0.10; z-index: 51;
+}
+
+#desktop {
+  position: relative; width: 100%; height: 100%;
+  background: radial-gradient(circle at 50% 30%, #2a1a08, #120e09 70%);
+}
+
+.panel {
+  background-color: var(--stone);
+  border: 3px outset var(--stone-light);
+  box-shadow: inset 0 0 12px #000;
+  pointer-events: auto;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.panel-header {
+  background: linear-gradient(180deg, var(--stone-dark), #050505);
+  border-bottom: 2px solid var(--stone-light);
+  color: var(--gold-text);
+  font-weight: bold; font-size: 13px; letter-spacing: 3px;
+  text-align: center; padding: 6px 10px; text-shadow: 1px 1px #000;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex: 0 0 auto;
+}
+.panel-title {
+  display: flex; align-items: center; gap: 8px;
+  justify-content: center; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.panel-body { padding: 10px 12px; overflow: auto; flex: 1 1 auto; min-height: 0; }
+
+.btn {
+  background: var(--os-interface);
+  border: 2px outset var(--stone-light);
+  color: var(--gold-text); font-weight: bold; cursor: pointer;
+  font-family: inherit; letter-spacing: 1px;
+  padding: 10px 12px; text-shadow: 1px 1px #000;
+  -webkit-tap-highlight-color: transparent;
+  transition: box-shadow 0.15s;
+}
+.btn:hover:not(:disabled) { box-shadow: 0 0 10px var(--glow); }
+.btn:active:not(:disabled) { border-style: inset; transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn.small { padding: 6px 10px; font-size: 11px; }
+.btn.tiny { padding: 3px 7px; font-size: 10px; letter-spacing: 0; }
+.btn.ghost { background: rgba(0,0,0,0.55); color: #ccc; }
+.btn.danger { color: #fff; background: #3a1414; border-color: #b05a5a; }
+.btn.good { color: #fff; background: #143a14; border-color: #5ab05a; }
+
+.tag {
+  display: inline-block; font-size: 10px; padding: 1px 6px;
+  border: 1px solid var(--stone-light);
+  background: rgba(0,0,0,0.55); color: #ccc; letter-spacing: 1px;
+  margin: 1px;
+}
+.tag.good { color: var(--good); border-color: rgba(46,204,113,0.6); }
+.tag.bad { color: var(--bad); border-color: rgba(255,91,91,0.6); }
+.tag.info { color: var(--info); border-color: rgba(127,219,255,0.6); }
+.tag.warn { color: var(--warn); border-color: rgba(255,133,27,0.6); }
+.tag.purple { color: var(--purple); border-color: rgba(179,139,255,0.6); }
+.tag.gold { color: var(--gold-text); border-color: rgba(255,184,0,0.6); }
+
+.statusLine {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  align-items: center; margin-top: 4px;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; font-size: 11px;
+  border: 2px outset #444; background: rgba(0,0,0,0.55);
+  color: #ddd; white-space: nowrap;
+}
+.pill strong { color: var(--gold-text); }
+.pill.danger strong { color: var(--bad); }
+.pill.warn strong { color: var(--warn); }
+.pill.good strong { color: var(--good); }
+
+#window {
+  position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px;
+  z-index: 10; display: grid;
+  grid-template-columns: 1fr 340px; gap: 10px;
+}
+@media (max-width: 980px) {
+  #window { grid-template-columns: 1fr; grid-template-rows: 1.6fr 1fr; }
+}
+@media (max-width: 600px) {
+  #window { top: 4px; left: 4px; right: 4px; bottom: 4px; gap: 5px; }
+}
+
+#main, #sidebar {
+  display: flex; flex-direction: column;
+  min-height: 0; min-width: 0;
+}
+
+/* === KEYBOARD === */
+.kb-wrap { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.kb-row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.kb-key {
+  position: relative;
+  min-width: 38px; height: 46px;
+  background: var(--os-interface);
+  border: 2px outset var(--stone-light);
+  color: var(--ink);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-weight: bold; font-size: 16px;
+  cursor: default; padding: 2px 4px;
+}
+.kb-key.empty { opacity: 0.25; filter: grayscale(1); }
+.kb-key.disabled { background: #2a0808; color: #555; border-color: #5a2828; }
+.kb-key.has-cap { box-shadow: 0 0 8px rgba(127,219,255,0.5); border-color: var(--info); }
+.kb-key.chip-1 { color: var(--good); }
+.kb-key.chip-2 { color: var(--info); }
+.kb-key.chip-3 { color: var(--purple); }
+.kb-key.chip-4 { color: var(--gold-text); text-shadow: 0 0 8px var(--glow); }
+.kb-key .count {
+  position: absolute; bottom: 1px; right: 3px;
+  font-size: 9px; color: #aaa; font-weight: normal;
+}
+.kb-key .cap-mark {
+  position: absolute; top: 1px; left: 3px;
+  font-size: 8px; color: var(--info);
+}
+.kb-key .chip-mark {
+  position: absolute; top: 1px; right: 3px;
+  font-size: 8px; color: var(--good);
+}
+
+@media (max-width: 600px) {
+  .kb-key { min-width: 28px; height: 38px; font-size: 13px; }
+  .kb-key .count { font-size: 8px; }
+}
+
+/* === WORD INPUT === */
+.word-area {
+  background: rgba(0,0,0,0.5);
+  border: 2px solid var(--stone-light);
+  padding: 12px; margin-bottom: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.word-display {
+  min-height: 48px;
+  font-size: 28px; font-weight: bold; letter-spacing: 4px;
+  color: var(--gold-text); text-align: center;
+  padding: 8px; background: #000;
+  border: 1px inset var(--stone-light);
+  word-break: break-all;
+  text-shadow: 0 0 6px var(--glow);
+}
+.word-display .cursor { animation: blink 1s steps(2) infinite; color: var(--ink); }
+@keyframes blink { 50% { opacity: 0; } }
+
+.word-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+.score-flash {
+  position: fixed; top: 30%; left: 50%;
+  transform: translate(-50%,-50%);
+  font-size: 64px; font-weight: bold;
+  color: var(--gold-text); text-shadow: 0 0 16px var(--glow), 4px 4px #000;
+  pointer-events: none; z-index: 200;
+  animation: scoreflash 1.4s ease-out forwards;
+}
+@keyframes scoreflash {
+  0% { opacity: 0; transform: translate(-50%,-30%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+  60% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-100%) scale(0.9); }
+}
+.score-flash.bad { color: var(--bad); text-shadow: 0 0 16px rgba(255,91,91,0.4), 4px 4px #000; }
+
+/* === LIST / CARDS === */
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list-item {
+  padding: 8px 10px; border: 2px outset rgba(111,99,86,0.7);
+  background: rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; gap: 5px;
+}
+.list-item .row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.list-item .name {
+  font-weight: bold; color: var(--gold-text);
+  font-size: 12px; letter-spacing: 1px;
+}
+.list-item .desc { color: #ccc; font-size: 11px; line-height: 1.4; }
+.list-item.fkey { border-color: rgba(127,219,255,0.5); }
+.list-item.keycap { border-color: rgba(127,219,255,0.5); }
+.list-item.manager { border-color: rgba(255,91,91,0.5); }
+.list-item.chip { border-color: rgba(46,204,113,0.5); }
+
+.card {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px;
+}
+.card h3 {
+  margin: 0 0 6px 0; font-size: 12px; letter-spacing: 2px;
+  color: var(--gold-text); text-shadow: 1px 1px #000;
+}
+.muted {
+  color: #b9b0a3; font-size: 11px;
+  line-height: 1.5; word-break: break-word;
+}
+
+/* === LOG === */
+#log {
+  height: 100%; max-height: 100%;
+  overflow: auto; background: #000;
+  border: 2px solid rgba(111,99,86,0.6);
+  padding: 8px;
+  font-family: "Courier New", monospace;
+  font-size: 11px; color: #b7ffb7; line-height: 1.4;
+  box-shadow: inset 0 0 12px #000;
+}
+#log .sys { color: var(--gold-text); }
+#log .bad { color: #ff9b9b; }
+#log .good { color: #b7ffb7; }
+#log .info { color: #a8e8ff; }
+#log .warn { color: #ffd0a0; }
+#log .lore { color: #d8b8ff; font-style: italic; }
+.logline { white-space: pre-wrap; margin: 0; }
+
+/* === MODAL === */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--stone);
+  border: 3px outset var(--stone-light);
+  box-shadow: 0 0 40px rgba(255,184,0,0.25), inset 0 0 12px #000;
+  max-width: 720px; width: 100%; max-height: 90vh;
+  display: flex; flex-direction: column;
+}
+.modal .panel-body { overflow: auto; padding: 14px; }
+
+/* === SHOP === */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.shop-item {
+  border: 2px outset rgba(111,99,86,0.7);
+  background: rgba(0,0,0,0.45);
+  padding: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.shop-item.purchased { opacity: 0.4; filter: grayscale(0.7); }
+.shop-item.fkey { border-color: rgba(127,219,255,0.6); }
+.shop-item.keycap { border-color: rgba(127,219,255,0.6); }
+.shop-item.pack { border-color: rgba(179,139,255,0.6); }
+.shop-item.chip { border-color: rgba(46,204,113,0.6); }
+.shop-item .item-name {
+  color: var(--gold-text); font-weight: bold;
+  font-size: 12px; letter-spacing: 1px;
+}
+.shop-item .item-desc { color: #ccc; font-size: 11px; line-height: 1.4; }
+.shop-item .item-cost {
+  color: var(--good); font-weight: bold; font-size: 14px;
+}
+.shop-item.cant-afford .item-cost { color: var(--bad); }
+
+/* === CHOICE GRID for packs === */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.choice-item {
+  border: 2px outset var(--stone-light);
+  background: rgba(0,0,0,0.55); padding: 10px;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.choice-item:hover { box-shadow: 0 0 10px var(--glow); border-color: var(--gold-text); }
+.choice-item.selected {
+  border-style: inset; box-shadow: 0 0 14px var(--glow);
+  background: rgba(58,51,43,0.6);
+}
+.choice-item.locked { opacity: 0.4; cursor: not-allowed; }
+
+/* === CAP ASSIGN === */
+.assign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 4px; margin-top: 8px;
+}
+.assign-letter {
+  background: var(--os-interface);
+  border: 2px outset var(--stone-light);
+  padding: 6px; text-align: center; cursor: pointer;
+  font-weight: bold;
+}
+.assign-letter:hover { box-shadow: 0 0 8px var(--glow); }
+.assign-letter.has-cap { color: var(--info); }
+.assign-letter.disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* === TITLE SCREEN === */
+.title-screen {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, #2e1f0e, #18130a 70%);  padding: 20px; gap: 16px; overflow: auto;
+}
+.title-logo {
+  font-size: clamp(36px, 8vw, 84px); font-weight: bold;
+  color: var(--gold-text); letter-spacing: 8px;
+  text-shadow: 0 0 20px var(--glow), 4px 4px #000;
+  text-align: center;
+}
+.title-sub {
+  color: #aaa; font-size: 14px; letter-spacing: 4px; text-align: center;
+}
+.title-tag {
+  color: var(--bad); font-size: 11px; letter-spacing: 2px;
+  margin-top: 4px; opacity: 0.7;
+}
+.font-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px; max-width: 700px; width: 100%;
+}
+.font-card {
+  border: 2px outset var(--stone-light);
+  background: rgba(0,0,0,0.55); padding: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.font-card:hover { box-shadow: 0 0 14px var(--glow); }
+.font-card.selected {
+  border-style: inset; background: rgba(58,51,43,0.6);
+  box-shadow: 0 0 18px var(--glow);
+}
+.font-card.locked { opacity: 0.45; cursor: not-allowed; }
+.font-card .fname {
+  color: var(--gold-text); font-weight: bold;
+  letter-spacing: 2px; font-size: 14px;
+}
+.font-card .fdesc { color: #ccc; font-size: 11px; margin-top: 4px; }
+.font-card .flore { color: #b38bff; font-size: 10px; font-style: italic; margin-top: 4px; }
+
+/* === DIALOGUE === */
+.dialogue {
+  border: 2px solid var(--stone-light);
+  background: rgba(0,0,0,0.85);
+  padding: 14px; margin: 8px 0;
+}
+.dialogue .speaker {
+  color: var(--gold-text); font-weight: bold;
+  letter-spacing: 2px; margin-bottom: 6px; font-size: 12px;
+}
+.dialogue .text { color: #ddd; font-size: 13px; line-height: 1.5; }
+.dialogue.bad .speaker { color: var(--bad); }
+.dialogue.warn .speaker { color: var(--warn); }
+.dialogue.lore .text { color: #d8b8ff; font-style: italic; }
+
+/* === ENDING === */
+.ending-screen {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #000; padding: 20px; gap: 18px; overflow: auto;
+}
+.ending-title {
+  font-size: clamp(28px, 6vw, 56px);
+  color: var(--gold-text); letter-spacing: 6px;
+  text-shadow: 0 0 16px var(--glow); text-align: center;
+}
+.ending-title.bad { color: var(--bad); text-shadow: 0 0 16px rgba(255,91,91,0.4); }
+.ending-text { max-width: 640px; color: #ddd; font-size: 14px; line-height: 1.7; text-align: center; }
+
+/* === scrollbars === */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: var(--stone-light); border: 2px solid #0a0a0a; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-text); }
+
+/* === tabs (unused but in style guide) === */
+.tabs { display: flex; gap: 4px; padding: 0 10px 8px; flex-wrap: wrap; }
+.tab {
+  padding: 6px 10px; background: var(--stone-dark);
+  color: #aaa; border: 2px outset var(--stone-light);
+  cursor: pointer; font-family: inherit; font-size: 11px;
+  font-weight: bold; letter-spacing: 1px;
+}
+.tab.active { background: var(--os-interface); color: var(--gold-text); }
+.tab:active { border-style: inset; }
+</style>
+</head>
+<body class="font-tnr">
+<div id="desktop"></div>
+
+<!-- TITLE SCREEN -->
+<div class="title-screen" id="titleScreen">
+  <div class="title-logo">TYPE OS</div>
+  <div class="title-sub">— KEYSTROKE TERMINAL —</div>
+  <div class="title-tag">EMPLOYEE ONBOARDING TERMINAL v1.0</div>
+  <div class="muted" style="text-align:center;max-width:560px;">
+    Welcome, applicant. The Company harvests <strong style="color:var(--gold-text)">word energy</strong>
+    from typists like you. Meet your daily quota — produce words, get paid.
+    Don't fail. <em>Please.</em> Choose your starting font:
+  </div>
+  <div class="font-grid" id="fontGrid"></div>
+  <button class="btn" id="startBtn" disabled>SIGN CONTRACT &gt;&gt;</button>
+  <div class="muted" style="font-size:10px;opacity:0.5;">
+    By signing, you agree that you cannot quit. Failure has consequences.
+  </div>
+</div>
+
+<!-- MAIN GAME WINDOW -->
+<div id="window" style="display:none;">
+  <!-- MAIN PANEL -->
+  <div id="main" class="panel">
+    <div class="panel-header">
+      <button class="btn tiny ghost" id="menuBtn">MENU</button>
+      <div class="panel-title">TYORUA TERMINAL — DAY <span id="dayDisplay">1</span></div>
+      <button class="btn tiny ghost" id="helpBtn">?</button>
+    </div>
+    <div class="panel-body">
+      <!-- STATUS BAR -->
+      <div class="statusLine" id="statusBar"></div>
+
+      <!-- WORD AREA -->
+      <div class="word-area" style="margin-top:8px;">
+        <div class="word-display" id="wordDisplay"><span class="cursor">_</span></div>
+        <div class="word-actions">
+          <button class="btn small ghost" id="backspaceBtn">⌫ BACKSPACE</button>
+          <button class="btn small ghost" id="shiftBtn">⇧ SHIFT (2)</button>
+          <button class="btn small ghost" id="capsBtn">⇪ CAPS OFF</button>
+          <button class="btn small ghost" id="clearBtn">CLEAR</button>
+          <button class="btn small good" id="enterBtn">⏎ SUBMIT WORD</button>
+        </div>
+        <div class="muted" style="text-align:center;font-size:10px;" id="wordHint"></div>
+      </div>
+
+      <!-- KEYBOARD -->
+      <div class="kb-wrap" id="keyboard"></div>
+
+      <!-- ACTION BAR -->
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn small" id="endDayBtn">END DAY (CASH OUT)</button>
+        <button class="btn small ghost" id="viewMgrBtn">VIEW MANAGER</button>
+        <button class="btn small ghost" id="viewChipsBtn">CHIPS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="panel">
+    <div class="panel-header">
+      <div class="panel-title">SYSTEM LOG</div>
+    </div>
+    <div class="panel-body" style="display:flex;flex-direction:column;gap:8px;padding:8px;">
+      <!-- F-Keys section -->
+      <div class="card">
+        <h3>F-KEYS (<span id="fkeyCount">0</span>/<span id="fkeyMax">5</span>)</h3>
+        <div class="list" id="fkeyList"><div class="muted">No F-keys yet.</div></div>
+      </div>
+      <!-- Keycaps section -->
+      <div class="card">
+        <h3>KEYCAPS (<span id="capCount">0</span>/<span id="capMax">8</span>)</h3>
+        <div class="list" id="keycapList"><div class="muted">No keycaps yet.</div></div>
+      </div>
+      <!-- Log section -->
+      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:160px;">
+        <h3>TERMINAL OUTPUT</h3>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div class="modal-overlay" id="modal">
+  <div class="modal panel">
+    <div class="panel-header">
+      <div class="panel-title" id="modalTitle">DIALOG</div>
+      <button class="btn tiny ghost" id="modalClose">×</button>
+    </div>
+    <div class="panel-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ENDING SCREEN -->
+<div class="ending-screen" id="endingScreen" style="display:none;">
+  <div class="ending-title" id="endingTitle">— FAILED —</div>
+  <div class="ending-text" id="endingText"></div>
+  <button class="btn" id="restartBtn">REAPPLY FOR THE JOB</button>
+</div>
+
+<div class="crt"></div>
+<div class="scanlines"></div>
+
+<script>
+/* =======================================================
+   TYORUA — THE COMPANY
+   A Balatro-style typing roguelike
+   ======================================================= */
+
+// =============== WORD DICTIONARY ===============
+const WORD_LIST_RAW = `a aah ace act add age ago aid aim air all and ant any ape arc are arm art ash ask ate atom aunt away awe axe baby back bad bag bake balm band bank bar barb bare bark barn base bash bask bat bath bay bead beak beam bean bear beat bed bee beef been beg bell belt bend bent best bet better bib bid big bike bile bill bin bind bird bit bite black blade blame bland blank blast bled bleed blend blew blind block blood blow blue blunt blur blush board boast boat body boil bold bolt bond bone bony book boom boon boost boot bore born borne both bough bound bout bow bowl box boy braid brain brake bran branch brand brass brave bread break breath bred breed brew brick bride brief bright brim bring brink brisk broad broil broke broken brook broom broth brought brow brown bruise brush buck buddy budge budget bug build built bulb bulk bull bullet bump bun bunch bundle bunk burden burn burnt burst bury bus bush busy but butter button buy buzz by bye cab cabin cable cage cake calf call calm came camp can canal cancel candy cane cap cape car card care cargo carp carry cart case cash cast cat catch cause cave cease cell cent chain chair chalk champ chance change chant chap chapel charge charm chart chase chat cheap cheat check cheek cheer cheese chef chess chest chew chick chief child chill chime chin china chip chirp choice choir choke choose chop chord chose chosen chuck chunk church churn cider cinch circle city civic civil claim clam clamp clan clang clap clash clasp class claw clay clean clear cleat cleft clerk click cliff climb cling clink clip cloak clock clone close cloth cloud clout clove clown club clue clump clung cluster clutch coach coal coast coat coax cobalt cobra cock cocoa code cog coil coin coke cold collar college color colt comb come comet comic comma cone confer cook cool coop cope copy cord core cork corn cost cot couch could count coup course court cousin cove cover cow coward cozy crab crack craft cram crane crank crash crate crave crawl crazy creak cream crease create credit creed creek creep crepe crept cress crest crew crib cried crime crisp critic crook crop cross crouch crowd crown crude cruel crumb crunch crush crust cry crypt cube cubit cuff culture cup curb cure curl curse curve cute cycle daft daily dairy dam damp dance dared dark darn dart dash data date daub daunt dawn day dead deaf deal dealt dean dear death debt decade decay deck decoy deed deep deer defy delay delta dense dent deny depth desk dial diary dice did die diet dig digit dim dime dimple dine dingy dinner dip dire dirt dirty dish disk ditch dive divide dizzy dock doctor does dog doll dolphin dome done door dose dote dot double dough dove down doze dozen draft drag drain drake drama drank drape draw drawn dread dream dreamt dress drew dried drift drill drink drip drive driven drove drown drug drum drunk dry dual duck duct due duel dug duke dull duly dumb dump dune dung dunk during dusk dust duty dwarf dwell dwelt dying each eager eagle ear earl early earn earth ease east easy eat eaten ebb echo edge edgy edit eel egg eight either elbow elder elect electric eleven elf elm else email ember emit empire empty end ends enemy energy enjoy enter entire envy equal err error escape essay even event ever every evil exam exit extra eye fable face fact fade fail faint fair fairy faith fake fall false famous fan fancy far farm fast fat fate fatal fault fawn fax fear feast feat feather fed fee feed feel feet fell fellow felt fence fern ferry feud fever few fib field fierce fiery fifth fight figure file fill film final find fine finger finish fir fire firm first fish fit five fix flag flake flame flap flare flash flat flatten flaw flax fled flee flesh flew flex flick flight flint flip flirt float flock flood floor flop flora flour flow flown fluid flunk flush flute fly foam focus fog foil fold folk follow fond food fool foot for force ford fork form fort forty forum found four fox foyer frail frame frank fraud freak free freeze fresh fret friar fried friend fright frill fringe frock frog from front frost frown froze fruit fry fuel full fume fun fund fungus funny fur furl fury fuse fuss fuzz gain gait gala gale gallon gallop game gang gap gape garb gas gate gather gauge gaunt gauze gave gay gaze gear gem gene genie gent gentle gear ghetto ghost giant gift gild gill gin girl give glad glance gland glare glass gleam glee glide glint gloat globe gloom glory gloss glove glow glue gnash gnaw goal goat god gold golf gone good goose gore gorge gory gosh got gown grab grace grade graft grain grand grant grape graph grasp grass grate grave gravy gray graze great green greet grew grey grid grief grill grim grime grin grind grip groan groin groom grope grouch ground group grout grove grow growl grown grub gruff grunt guard guess guest guide guild guilt guise gulch gulf gum gun gust gut guy gym hack had hag hail hair half hall halt ham hand handle hang hangar happy harm harp harsh hash hassle haste hat hatch hate haul have haven havoc hawk hay haze head heal health heap hear heard heart heat heaven heavy heel hefty heir held help hem hen herb herd here hero hew hex hi hide high hike hill hilt him hind hint hip hire his hiss hit hive hoard hoax hobby hog hold hole hollow holly holy home honey honor hood hoof hook hoop hop hope horde horn horror horse hose host hot hotel hound hour house hovel how howl hub hug huge huh hull human humble humid hump hunch hung hunt hurl hurry hurt hush husk hut hymn ice icy idea ideal idle idol if ill image imply inch income index indoor inert infer ink inn inner input insect inside insist into invite iron is island isle issue it itch item ivory ivy jab jack jade jail jam jar jaunt jaw jay jazz jeep jeer jelly jet jewel jig job jog join joint joke jolly jolt journey joy judge juice juicy jumbo jump junior junk just jut keep keg kelp kept ketch key kick kid kill kiln kin kind king kink kiss kit kite kitten knack knee knelt knew knit knob knock knot know known lab lace lack lad ladder lady lag laid lake lame lamp land lane lank lap lapse large lark laser lash last late later latte laugh launch lava law lawn lay layer lazy lead leaf league leak lean leap learn least leave leech left leg legal lemon lend length lens lent less lest let level lever library license lid lie lie life lift light like limb lime limit limp line linen link lint lion lip list listen lit live load loaf loan lobby local lock lodge loft log logic lone long look loom loon loop loose loot lord lose loss lost lot loud lounge love low lower loyal luck lucky lump lunch lung lurch lurk lush lust lute lying mace machine mad made mafia magic magma mail main maize major make mall man mane mango map mar march mare mark mart mask mass mast match mate math may maybe mayor maze me mead meal mean meant meat medal meet melt member memo men mend menu mercy mere merge merit merry mesh mess met metal meter method mid midst might mild mile milk mill mime mind mine mini mink minor mint minus minute mirror mist mix moan mob mock mode model mold mole mom moment money monk month mood moon moose mop moral more morn moss most moth mother motor mound mount mourn mouse mouth move movie mow much muck mud muff mug multi mum mummy mural muse mush music must mute myth nab nag nail naive name nape narrow nasty natal nature naval navy near neat neck need needle negate nephew nerve nest net never new news next nice niche nick niece night nine nip no nobody node noise none nook noon nope norm north nose nosey not note notice noun nova novel now nowhere nuance null numb number nun nurse nut nylon oak oar oat oath obey object oblige oboe occur ocean oct odd odor of off offer office often oh oil okay old older olive omen omit on once one onion only onto onus open opera opt or oral orange orbit order ordeal ore organ origin other otter ought ounce our oust out outer oven over owe owl own ox oyster pace pack pad page paid pail pain paint pair palm pan panda panel panic pant paper pardon pare park part party pass past pasta paste path patio paw pawn pay peace peach peak peal pear peer pelt pen penny per perch peril perky person pest pet petal pew phase phone phony piano pick pie piece pier pig pile pill pilot pin pinch pine pink pint pious pipe pit pitch pity pixel place plain plan plane plank plant plate play plaza plea plead pleat plot plow pluck plug plum plump plunge plural plus pod poem poet point poise poke pole police polish polo pond pony pool poor pop pope porch pore port pose post pot pouch pound pour power praise pray pre press preset price pride priest prim primal prime print prior prize pro probe proof proud prove prune pry pub pulp pulse pump punch pupil pure purge purple push put quack quaint quake qualm quark quart quartz quash queen queer quell query quest queue quick quiet quill quilt quirk quit quite quiz quote race rack radar radio rage raid rail rain raise rake ram ran ranch range rank rant rapid rare rash rate rather raven raw ray reach react read ready real realm reap rear reason rebel red redo reed reef reek reel reflex regal reign rein relax relay rely remit rent repay reply rerun rescue resin rest reuse revel rib rice rich rid ride ridge rifle rift rig right rigid rim ring rink rinse riot rip ripe rise risk rival river road roam roar roast rob robe rock rod rode rogue role roll roof rook room root rope rose rot rough round rouse rove row royal rub ruby rude rug ruin rule run rung runt rush rust rye sack sad safe sage said sail saint sake salad salon salt salty same sand sane sang sank sat satin sauce save saw say scale scan scant scar scare scarf scene scent scoff scold scoop scope score scorn scour scout scowl scram scrap scrape scratch scream screen screw script scroll scrub scuba scuff scum sea seal seam search season seat second see seed seek seem seen seep seer seize seldom self sell send sense sent set seven sever sew shack shade shaft shake shall shallow sham shame shape share shark sharp shave shawl she shear sheath shed sheen sheep sheer sheet shelf shell shift shin shine ship shirt shiver shock shoe shoo shook shoot shop shore short shot shout shove show shown shrank shred shrew shriek shrill shrimp shrine shrink shrub shrug shun shut shy sick side siege sieve sift sigh sight sign silk sill silt silly silver simple sin since sing sip sir siren sit site six size skid skill skim skin skip skirt skull sky slab slack slain slam slang slap slash slate slay sled sleek sleep sleet slept slew slice slick slid slide slim slime sling slink slip slit sliver slob slog slope slosh slot sloth slow slug slum slump slung slur slush sly smack small smart smash smear smell smelt smile smith smock smog smoke smolder smooth smug snack snag snail snake snap snare snarl snatch sneak sneeze snide sniff snip snob snore snort snout snow snub snug so soak soap soar sob sober soccer sock soda sofa soft soggy soil sold sole solid solve some son song soon soot sooth sore sorry sort soul sound soup sour source south sow space span spank spare spark sparse spasm spat spawn speak spear speck speech speed spell spend spent sperm spew sphere spice spider spike spill spin spine spire spit spite splash spleen split spoil spoke spoon sport spot spout spray spread spring sprite sprout spruce spry spun spur spurn spurt spy squad squall square squash squat squeak squid squint stab stack staff stag stage stain stair stake stale stalk stall stamp stand stank star stare stark start state stave stay steam steed steel steep steer stem step stern stew stick stiff still stilt sting stink stir stitch stock stoic stoke stole stomp stone stood stool stoop stop store stork storm story stout stove stow strap straw stray streak stream street stress strict stride strife strike string strip strive stroke stroll strong struck strum stub stuck stud studio stuff stumble stump stun stung stunt sty style suave suburb such suck sudden sue suet sugar suit sulk sum summer sun sung sunk sunny sup super sure surf surge swab swag swam swamp swan swap swarm sway swear sweat sweep sweet swell swept swift swim swine swing swirl switch swoon swoop sword swore sworn swung syrup table taboo tackle tact tactic tag tail take tale talk tall tame tan tang tangle tank tap tape tar tarp tart task taste tattoo taunt tax taxi tea teach team tear teary tease teen tell ten tend tense tent tepid term terror test text than thank that thaw the their them then there these they thick thief thigh thin think third this thorn those though thought thrash thread three thresh threw thrice thrift thrill throat throne throng through throw thrown thrust thud thug thumb thump thus thwart tick tide tidy tie tier tiger tight tile till tilt timber time tin tinge tint tiny tip tire title to toad toast today toe tofu togs toil told toll tomb tome tone tongue tonic too took tool tooth top topaz topic torch torn toss total tote touch tough tour tout tow towel tower town toy trace track trade trail train trait trance trap trash tray tread treat tree trek trend trial tribe trick tried trim trio trip troop trot trout trove truce truck true trump trunk trust truth try tube tuck tuft tug tuna tune tunnel turf turn tusk tutor tweed tweet twelve twice twig twin twist twit two type ugly under undo undue unfit unfix union unit unite unity unsafe until upper urban urge urn us use used user usher utter vague vain vale valid value valve van vase vast vat vault veal veer veil vein velvet vend venom vent venture verb verge verse very vest veto via vibe vice video view vile vine viper viral virus visa vise visit visor vital vivid vixen vocal vogue voice void volt vote vouch vow vowel voyage wad wade wafer waft wage wail waist wait wake walk wall wand want war ward ware warm warn warp wart wary was wash wasp waste watch water watt wave wax way we weak weal wealth wean wear weary weave web wed wedge week weep weigh weight weird weld well went wept were west wet whale wharf what wheat wheel when where which whiff while whim whine whip whirl whisk whisper white who whole whom whoop whose why wick wide wife wig wild wile will wilt win wince winch wind wine wing wink wipe wire wise wish wisp witch with within woe woke wolf woman womb won wonder wood wool word wore work world worm worn worry worse worst worth would wound wove woven wrap wrath wreck wren wrench wrest wrist write writ wrong wrote wrought wrung wry yam yank yard yarn yawn year yeast yell yes yet yield yoga yogurt yoke yolk yore you young your youth zeal zebra zero zest zinc zip zone zoo zoom company keyboard manager quota typing typist typewriter terminal computer screen monitor mouse cable wire button click keys letter letters word words sentence paragraph chapter page book novel story poem writer author reader reading writing typed typing types text texts message email inbox outbox sent draft folder file files document documents report reports memo memos contract contracts paper papers print printer scanner printout paycheck salary wage wages bonus bonuses overtime debt debts loan loans bank banker money cash coin coins dollar dollars cent cents fund funds budget budgets cost costs price prices value values worth wealthy poor rich middle class worker workers boss bosses employee employees employer staff team teams office offices building buildings floor floors room rooms desk desks chair chairs lamp lamps light lights window windows door doors wall walls ceiling floor carpet rug rugs paint painted painting walls hallway corridor stairway stairs elevator basement attic roof rooftop garage parking lot lots town towns city cities village villages district neighborhood community communities country countries state states region regions area areas zone zones place places location locations spot spots site sites address addresses street streets road roads avenue avenues lane lanes way ways path paths route routes highway highways bridge bridges tunnel tunnels park parks garden gardens forest forests jungle jungles desert deserts mountain mountains hill hills valley valleys river rivers lake lakes ocean oceans sea seas pond ponds island islands beach beaches coast coasts shore shores bay bays cliff cliffs cave caves rock rocks stone stones pebble pebbles sand sands dirt mud dust ash ashes ember embers spark sparks flame flames fire fires smoke smokes burn burned burning burnt warm warmth heat heated cool cooled cold colder coldest hot hotter hottest freeze freezes frozen ice icicle icicles snow snowed snowing snowflake snowflakes wind windy windier blew blow blown breeze breezes gust gusts storm storms thunder thunders lightning rain rained raining rainy rainbow cloud clouds cloudy mist misty fog foggy weather forecast season seasons spring summer autumn fall winter year years month months week weeks day days hour hours minute minutes second seconds moment moments instant instants today yesterday tomorrow morning evening afternoon midnight noon dawn dusk sunrise sunset birthday holiday vacation weekend appointment schedule calendar meeting meetings party parties event events function functions ceremony ceremonies wedding funeral graduation reunion festival festivals celebrate celebrated celebration fellowship friendship friend friends family families parent parents father mother dad mom mommy daddy son sons daughter daughters child children kid kids baby babies infant toddler teen teenager adult senior elder grandfather grandmother grandparent grandparents grandchild grandchildren brother brothers sister sisters cousin cousins uncle uncles aunt aunts niece nephew husband wife spouse partner couple boyfriend girlfriend lover lovers neighbor neighbors stranger strangers visitor visitors guest hostess host pet pets dog dogs cat cats fish fishes bird birds rabbit rabbits hamster hamsters horse horses cow cows pig pigs sheep goat goats chicken chickens duck ducks goose geese turkey turkeys deer fox foxes wolf wolves bear bears tiger tigers lion lions monkey monkeys elephant elephants rhinoceros zebra giraffe giraffes kangaroo kangaroos panda pandas dolphin whale whales shark sharks octopus jellyfish starfish snake snakes lizard frog frogs toad spider insect insects bee bees ant ants fly flies mosquito butterfly butterflies moth caterpillar beetle worm worms tree trees branch branches leaf leaves flower flowers rose roses tulip tulips daisy lily orchid violet sunflower stem stems root roots seed seeds fruit fruits apple apples banana bananas orange oranges grape grapes peach lemon lime lemons cherry cherries strawberry blueberry pineapple coconut watermelon melon kiwi mango pear pears plum berry berries vegetable vegetables carrot carrots potato potatoes tomato tomatoes onion onions garlic pepper peppers mushroom mushrooms broccoli cucumber lettuce spinach cabbage corn beans pea peas grain grains rice wheat oats barley flour sugar salt spice spices herb herbs basil thyme parsley pasta noodles bread loaves loaf cake cakes cookie cookies pie pies pizza burger sandwich sandwiches salad soup stew sauce sauces gravy butter cheese cheeses milk cream yogurt egg eggs bacon ham sausage chicken beef pork lamb fish seafood lobster crab shrimp tuna salmon water tea coffee juice soda lemonade beverage drink drinks beer wine cocktail breakfast lunch dinner supper snack meal meals feast hungry thirsty stomach belly mouth lips tongue teeth tooth gum gums throat chin cheek cheeks face faces forehead nose ear ears eye eyes eyelid eyelash eyebrow hair head heads neck shoulder shoulders arm arms hand hands finger fingers thumb thumbs nail nails wrist elbow palm palms fist fists chest breast back spine waist hip hips leg legs thigh knee knees calf calves shin ankle foot feet heel heels toe toes skin bone bones muscle muscles blood vein veins heart heartbeat pulse breath breathing lung lungs liver kidney brain mind soul spirit body bodies health healthy sick illness disease cough cold flu fever pain ache aches injury wound wounds bruise scar cut bandage medicine pill pills doctor doctors nurse nurses hospital hospitals clinic patient patients dentist surgeon surgeons therapy therapist treatment exam diagnosis prescription pharmacy school schools college colleges university universities student students teacher teachers professor principal classroom classrooms class classes lesson lessons course courses subject subjects math mathematics science sciences history geography literature language languages english spanish french german chinese japanese italian russian arabic latin greek hindi exam exams test tests quiz quizzes question questions answer answers problem problems solution solutions homework assignment assignments project projects essay essays presentation lecture lectures study studied studying learn learned learning education knowledge wisdom skill skills talent talents ability abilities expert experts beginner amateur professional career careers job jobs work workplace workplaces trade business businesses industry industries factory factories warehouse store stores shop shops market markets supermarket mall malls boutique restaurant restaurants cafe cafes diner bakery butcher salon barber hotel motel inn motels resort cinema theater theaters museum museums library libraries gallery park playground stadium arena gymnasium pool swimming court courts field court church churches temple mosque cathedral religion belief faith god gods goddess prayer prayers worship pilgrim pilgrimage saint saints angel angels demon demons devil heaven hell paradise tomb grave graves cemetery funeral memorial memory memories remember remembered remembers forget forgot forgotten forgive forgave forgiven sorry apology apologies thanks thankful grateful gratitude please welcome greeting hello goodbye farewell hi hey ciao greetings introduction introduce introduced introducing meeting meet meeting met conversation conversations talk talked talking speak spoke spoken speech speeches lecture say said saying tell told telling whisper whispered shout shouted shouting yell yelled yelling scream screamed screaming sing sang singing song songs music note notes melody melodies tune tunes rhythm rhythms beat beats drum drums guitar guitars piano violin trumpet flute saxophone instrument instruments band bands orchestra concert concerts album albums singer singers musician dancer dance dances dancing dance dancing actor actress acting movie movies film films cinema show shows series episode episodes drama comedy thriller horror romance action adventure fantasy mystery sport sports game games play played playing player players coach coaches referee umpire goal goals score scores point points run runs hit hits ball balls bat bats racket club clubs golf tennis baseball basketball football soccer hockey volleyball cricket rugby boxing wrestling swimming running cycling skiing skating diving climbing hiking camping fishing hunting riding rowing sailing surfing skating travel travels traveler vacation tour tours guide guides journey journeys trip trips voyage voyages flight flights airport airports plane planes airplane airplanes train trains station stations bus buses subway taxi taxis car cars vehicle vehicles truck trucks van vans bicycle bicycles motorcycle motorcycles boat boats ship ships ferry helicopter rocket rockets space station spacecraft astronaut planet planets star stars galaxy galaxies sun moon earth mars venus jupiter saturn neptune mercury uranus pluto comet asteroid satellite orbit orbits gravity universe nature natural environment environmental pollution recycle recycled recycling green energy solar wind nuclear power powerful powered powerless electric electrical electricity battery batteries charge charged charger generator engine engines machine machines machinery equipment equipped tool tools hammer hammers screwdriver wrench saw saws drill drills nail nails screw screws bolt bolts nut nuts pliers tape glue paint brush brushes pencil pencils pen pens marker markers crayon eraser ruler rulers paperclip stapler clip clips folder folders binder envelope envelopes stamp stamps mail mailbox mailman postman post postal package packages parcel parcels box boxes bag bags suitcase backpack purse purses wallet wallets pocket pockets coin coins key keys lock locks padlock door doorknob handle handles knob knobs switch switches plug plugs socket outlet outlets cord cords wire wires cable cables phone phones telephone cellular mobile smartphone tablet tablets laptop desktop computer computers keyboard keyboards mouse monitor monitors screen screens display displays printer printers scanner cable internet website websites webpage webpages web browser browsers software hardware program programs application applications app apps download downloaded downloads upload uploaded uploads file files folder folders database server servers cloud network networks wifi password passwords account accounts login logout sign signed signing register registered registers email mail texting messaging chat chatted chatting message messages reply replied replying forward forwarded delete deleted deleting save saved saving copy copied copying paste pasted pasting cut undo redo print printed printing scan scanned scanning click clicked clicking type typed typing key keys press pressed pressing tap tapped tapping swipe swiped swiping touch touched touching scroll scrolled scrolling zoom zoomed zooming photo photos picture pictures image images album albums camera cameras lens lenses video videos audio sound sounds noise noises silence silent quiet loud louder loudest noisy whisper roar roared roaring yell shout scream cry crying tears tear teary laugh laughed laughing chuckle giggle smile smiled smiling frown frowned frowning grin grinned grinning sigh sighed sighing sob sobbed sobbing weep wept smile happiness joy joys joyful happy happier happiest sad sadder saddest sadness sorrow grief grieve grieved grieving angry anger furious mad madder rage rages fury fuming pissed annoyed annoying annoyance frustrated frustration confused confusion confusing surprise surprised surprising shock shocked shocking amazed amazement amazing wonder wondered wondering wonderful awesome incredible terrific fantastic excellent great greater greatest good better best bad worse worst awful terrible horrible scary scared scary frightened fright afraid fear feared fearing brave braver bravest bravery courage courageous coward cowardly timid shy bold boldly boldness friendly friendliness kind kindness cruel cruelty harsh gentle gentleness rough roughly soft softly hard hardly easy easier easiest easily simple simpler simplest simply complex complexity complicated difficult difficulty challenge challenging challenged exciting excited excitement boring bore bored boredom interesting interested interest interests curious curiosity question questioning answer answering reply replying response responses respond responded responding ask asked asking inquire inquired inquiry inquiries doubt doubted doubts doubtful doubtless certain certainty uncertain sure unsure positive negative neutral hopeful hope hoping hoped hopeless dream dreaming dreamed dreamer dreamy nightmare wish wishing wished wishes pray prayed praying prayer prayers thanks thanked thanking gratitude apologize apologized apologizing forgive forgiven forgiving forgiveness regret regretted regretting regrets ashamed shame embarrassed embarrassing embarrassment proud pride prideful arrogant arrogance humble humility honest honesty honestly dishonest liar lie lied lying truth truthful trust trusted trusting distrust suspicious suspicion suspect suspected secret secrets secretly hidden hide hiding revealed reveal revealing private privacy public publicly publish published publishing publication news newspaper newspapers headline headlines article articles report reported reporter reporters journalist journalism story stories tale tales fairy myth myths legend legends folklore tradition traditions custom customs habit habits routine routines schedule scheduled scheduling schedule plan planned planning plans goal goals aim aims target targets purpose purposes intent intention intentions decide decided deciding decision decisions choose chose chosen choice choices select selected selecting selection options option pick picked picking accept accepted accepting reject rejected rejecting refusal refuse refused refusing approve approved approving approval disapprove agree agreed agreeing agreement disagree disagreement support supported supporting supporter opponent oppose opposed opposing opposition argue argued arguing argument arguments debate debated debating discuss discussed discussing discussion discussions conversation conversations talk talks speech speeches presentation presentations lecture lectures explain explained explaining explanation explanations describe described describing description descriptions tell told telling story stories narrative narratives narrate narrated narrator inform informed informing information data details detail detailed specific generic general specifically generally typically usually normally regularly often occasionally sometimes seldom rarely never always frequent frequently constantly continually continuous continuously sudden suddenly quickly quick quicker quickest fast faster fastest slow slower slowest slowly gradually steadily steady carefully careful careless carelessly safe safer safest safely danger dangerous dangerously risky risk risks risked risking gamble gambled gambling chance chances probability possible possibly possibility impossible likely unlikely probably probable maybe perhaps definitely surely truly really actually genuinely sincerely honestly seriously basically essentially primarily mainly mostly entirely completely totally fully partially partly somewhat slightly nearly almost about approximately exactly precisely just only merely simply purely solely whole half quarter third tenth hundred thousand million billion trillion zillion couple few many several various numerous countless numerous infinite finite limited unlimited bounded boundless endless eternal eternally forever always never sometime sometimes anytime anywhere everywhere nowhere somewhere here there nearby distant far away close closer closest near nearer nearest faraway remote inside outside indoor outdoor exterior interior internal external center central middle middle edge edges border borders boundary boundaries corner corners side sides front back rear top bottom upper lower above below over under across along around through between among amid amidst beside next beyond opposite parallel perpendicular vertical horizontal diagonal straight curved curve curves bend bent bending angle angles direction directions north south east west northern southern eastern western up down left right forward backward sideways inward outward upward downward leftward rightward homeward seaward landward heaven sky skies cloud clouds horizon star stars galaxy moon moonlight sunlight sunshine daylight dim dark darkness shadow shadows shade shaded twilight gloomy bright brighter brightest dim dimmer dimmest dull duller dullest sharp sharper sharpest blunt blunter sharp soft hard wet damp moist dry drier driest soak soaked soaking wet wetter wettest clean cleaner cleanest clean dirty dirtier dirtiest filthy spotless tidy neat neater untidy messy messier messiest organized disorganized order ordered ordering chaos chaotic confusion straight crooked smooth smoother smoothest rough rougher roughest hairy bald shiny shinier dull glow glowing glowed glistening sparkle sparkling sparkled glimmer glimmering shimmer shimmering twinkle twinkling fade faded fading vanish vanished vanishing disappear disappeared disappearing appear appeared appearing arrive arrived arriving arrival departure depart departed departing leave leaving left enter entered entering exit exited exiting come came coming go going went gone return returned returning visit visited visiting follow followed following lead led leading guide guided guiding direct directed directing instruct instructed instructing teach taught teaching learn learned learnt learning study studied studying explore explored exploring discover discovered discovering find found finding search searched searching seek sought seeking look looked looking watch watched watching observe observed observing notice noticed noticing see saw seen view viewed viewing glance glanced glancing glimpse peek peeked peeping stare stared staring gaze gazed gazing peer peered peering glimpse glimpsed listen listened listening hear heard hearing sound sounded sounding talk talked talking speak spoke speaking shout shouted shouting yell whisper murmured murmuring mutter muttered muttering hum hummed humming sing sang sung singing whistle whistled chant chanted chanting silence silent quiet quieter quietest noise noisy loud louder write wrote written writing read reads reading book booked booking publish published publication author authors poet poets compose composed composing composer composers create created creating creation creations creator creative creativity creativeness make made making build built building builder construct constructed construction destroy destroyed destroying destruction demolish demolished damage damaged damaging broken break broke breaking shatter shattered crack cracked cracking smash smashed smashing crush crushed crushing fix fixed fixing repair repaired repairing mend mended mending restore restored restoring renew renewed renewing replace replaced replacing change changed changing transform transformed alter altered altering modify modified modifying adjust adjusted adjusting improve improved improving better bettered worsen worsened decline declining grow grew grown growing develop developed developing develop development developments evolve evolved evolving evolution evolutionary advance advanced advancing advance progress progressed progressing progression progressive regress retreated retreat retreating succeed succeeded success successful fail failed failing failure failures lose lost losing loss losses win won winning winner winners victory victorious gain gained gaining earn earned earning achieve achieved achieving achievement accomplishment accomplish accomplished pursue pursued pursuing pursuit pursued chase chased chasing run ran running runner walk walked walking walker stroll strolled strolling jog jogged jogging hop hopped hopping skip skipped skipping jump jumped jumping leap leaped leaping climb climbed climbing crawl crawled crawling slide slid sliding slip slipped slipping fall fell fallen falling drop dropped dropping spill spilled spilling pour poured pouring drink drank drunk drinking eat ate eaten eating chew chewed chewing bite bit bitten biting swallow swallowed swallowing taste tasted tasting smell smelled smelling sniff sniffed sniffing breathe breathed breathing inhale inhaled exhale exhaled cough coughed coughing sneeze sneezed sneezing yawn yawned yawning blink blinked blinking wink winked winking nod nodded nodding shake shook shaking shiver shivered shivering tremble trembled trembling shudder shuddered cringe cringed cringing flinch flinched wave waved waving hug hugged hugging embrace embraced embracing kiss kissed kissing hold held holding grasp grasped grabbing grab grabbed catch caught catching throw threw thrown throwing toss tossed tossing kick kicked kicking punch punched punching slap slapped slapping push pushed pushing pull pulled pulling tug tugged tugging carry carried carrying lift lifted lifting drop dropped place placed placing put set sets setting position positioned positioning move moved moving travel traveled traveling cross crossed crossing pass passed passing reach reached reaching offer offered offering provide provided providing supply supplied supplying give gave given giving send sent sending receive received receiving accept accepted accepting refuse refused take took taken taking borrow borrowed borrowing lend lent lending share shared sharing exchange exchanged exchanging trade traded trading buy bought buying purchase purchased purchasing sell sold selling vendor vendors customer customers client clients consumer consumers product products goods item items merchandise package packages deliver delivered delivering delivery deliveries shipment shipped shipping receive received order ordered ordering pay paid paying payment payments charge charged charging bill bills invoice invoices receipt receipts cost costs price prices fee fees tax taxes refund refunded refunding spend spent spending save saved saving deposit deposited withdraw withdrew withdrawn withdrawal account accounts balance balanced balancing checkbook check checks transfer transferred transferring loan loaned loaning borrow lender borrower mortgage rent rental rented renting tenant landlord landlady property properties asset assets investment investments stock stocks share shares portfolio bond bonds dividend dividends interest rate rates percent percentage profit profits loss losses revenue revenues income incomes earning earnings expenses expense expenditure expenditures budget budgets economy economic economics financial finance finances accountant accounting bookkeeper bookkeeping audit auditor business commerce trade market marketplace economy gross net total subtotal amount amounts quantity quantities number numbers figure figures statistic statistics average median mean mode range maximum minimum highest lowest level levels rank ranks rate rates ratio ratios percent percentage percentages fraction fractions decimal decimals integer integers digit digits zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred thousand million billion first second third fourth fifth sixth seventh eighth ninth tenth eleventh twelfth twentieth dozen score gross pair pairs triplet quartet quintet single singles double doubles triple triples once twice thrice many much more most less least few fewer fewest little less small smaller smallest tiny tiniest big bigger biggest huge huger hugest large larger largest enormous massive gigantic huge tremendous immense vast wide wider widest narrow narrower narrowest broad broader broadest thick thicker thickest thin thinner thinnest fat fatter fattest skinny lean thick high higher highest tall taller tallest short shorter shortest long longer longest brief briefer briefest deep deeper deepest shallow shallower steep steeper steepest gentle gradual abrupt sudden sharp keen dull blunt heavy heavier heaviest light lighter lightest weighty massive bulky compact dense densely sparse sparsely thick thinly empty emptier emptiest full fuller fullest hollow stuffed packed crowded crowd crowds masses mass massive minimal maximum minimum extreme extremely incredible incredibly amazingly stunningly remarkably notably significantly considerably substantially largely greatly highly notably particularly especially individually personally collectively together apart separately separate separated separating join joined joining unite united uniting unity unite united combine combined combining combination connect connected connecting connection connections link linked linking attach attached attaching detach detached detaching divide divided dividing division divisions split splitting splits separate separated parted part parts piece pieces fragment fragments segment segments section sections portion portions slice slices chunk chunks piece block blocks bit bits crumb crumbs flake flakes shred shreds particle particles spec specks dust grain grains drop drops droplet droplets blob blobs lump lumps mound mounds heap heaps pile piles stack stacks bunch bunches cluster clusters group groups team teams squad squads crew crews gang gangs band bands troop troops army armies battalion brigade regiment company companies division divisions department departments agency agencies organization organizations institution institutions corporation corporations firm firms partnership partnerships council councils committee committees board boards panel panels jury juries court courts assembly assemblies parliament congress senate chamber chambers session sessions meeting meetings conference conferences convention conventions summit summits gathering gatherings reunion reunions get-together gettogether crowds audience audiences spectator spectators viewer viewers fan fans supporter supporters follower followers leader leaders chief chiefs commander commanders captain captains general generals colonel major lieutenant sergeant officer officers soldier soldiers warrior warriors fighter fighters knight knights archer archers swordsman swordsmen ranger rangers scout scouts spy spies guard guards sentry sentries watchman watchmen guardian guardians protector protectors defender defenders attacker attackers invader invaders enemy enemies foe foes opponent opponents rival rivals adversary adversaries ally allies friend friends partner partners colleague colleagues coworker coworkers companion companions comrade comrades buddy buddies pal pals dude dudes bro bros sis sisters mate mates fellow fellows guy guys gal gals man men woman women boy boys girl girls youth youths child children kid kids baby babies infant infants toddler toddlers teenager teen teens adult adults senior seniors elder elders person persons people peoples human humans humanity mankind populace population populations citizen citizens resident residents inhabitant inhabitants native natives foreigner foreigners stranger immigrant emigrant tourist tourists traveler travelers nomad nomads wanderer pilgrim refugee refugees minority majority public crowd masses individual individuals self self-self single mostly partially partly entirely completely totally absolutely definitely certainly surely truly really genuinely sincerely honestly carefully cautiously slowly quickly rapidly swiftly fast fastly speedily hastily hurriedly suddenly abruptly instantly immediately promptly soon shortly later eventually finally ultimately recently lately previously formerly originally initially primarily firstly secondly thirdly fourthly fifthly subsequently afterwards then now currently presently nowadays today thus therefore hence consequently accordingly rather instead otherwise however moreover furthermore additionally besides nevertheless nonetheless although though however still yet but and or nor for so since because before after while during until throughout despite regardless without with within along among between within into onto upon above below across around through behind beside beneath beyond except besides toward towards forward backward inward outward forwards backwards homeward seaward eastward westward forever evermore endlessly perpetually constantly continually permanently temporarily briefly momentarily instantly gradually slowly steadily progressively increasingly diminishingly decreasingly randomly accidentally deliberately purposely intentionally voluntarily involuntarily reluctantly eagerly enthusiastically excitedly happily joyfully gleefully cheerfully blissfully sadly gloomily mournfully tearfully bitterly angrily furiously irritably impatiently patiently calmly peacefully quietly silently noisily loudly clearly obviously evidently apparently seemingly probably possibly perhaps maybe likely unlikely surprisingly unexpectedly fortunately unfortunately luckily unluckily mercifully thankfully sadly tragically excitingly boringly interestingly fascinatingly curiously amazingly stunningly stunningly impressively remarkably awfully terribly horribly horrifically extremely extraordinarily particularly especially specifically generally usually normally routinely typically commonly frequently regularly occasionally rarely seldom never always ever forever throughout sometimes anytime everywhere nowhere somewhere everywhere overall altogether basically essentially primarily mainly mostly literally figuratively practically theoretically actually really truly genuinely seriously honestly merely purely simply solely only just exactly precisely directly indirectly thoroughly profoundly deeply slightly mildly heavily lightly carefully cautiously cleverly skillfully expertly artfully gracefully elegantly stylishly beautifully handsomely attractively gorgeously stunningly cute cuteness pretty prettier prettiest beautiful beauty beauteous lovely loveliness handsome dashing charming charm charms charming attractive attraction attractiveness appeal appealing repulsive ugly uglier ugliest plain plainness plainly plain ordinary extraordinary remarkable common commonplace usual unusual rare uncommon strange weird odd peculiar peculiarity unique uniqueness special specially specially spectacular notable noted famous renowned celebrated legendary mythical mythological imaginary imagined imaginary real reality realistic realistically actual actually genuine genuinely authentic authenticity false fake phony pretend fictional fiction nonfiction literature literary author authors writer writers poet poets poetry poem poems prose prose verse verses rhyme rhymes rhythm rhythms beat beats meter meters tone tones pitch pitches voice voices accent accents dialect dialects language languages tongue tongues phrase phrases expression expressions idiom idioms saying sayings proverb proverbs quote quotes quotation quotations word words term terms vocabulary vocabularies dictionary dictionaries thesaurus glossary glossaries grammar grammatical syntax syntactic semantic semantics meaning meanings sense senses definition definitions interpretation interpretations translation translations translator translators interpret interpretation explain explanation explanations describe descriptions clarify clarifying clarification clarifications elaborate elaborated elaborating elaboration detail details specifically specific generally general broadly narrowly briefly concisely succinctly tersely verbosely lengthily extensively comprehensively completely thoroughly utterly absolutely inevitably necessarily essentially fundamentally basically primarily mainly mostly chiefly principally largely generally usually typically normally commonly ordinarily customarily traditionally conventionally formally informally officially unofficially publicly privately personally individually collectively together separately independently autonomously freely freely willingly voluntarily reluctantly hesitantly eagerly enthusiastically passionately zealously fervently intensely strongly weakly mildly slightly somewhat barely hardly almost nearly entirely fully completely partly partially halfway midway center central centrally peripheral peripherally edge edged edges border bordered borders bound bounded bounds boundary boundaries limit limited limits unlimited boundless endless infinite finite measurable measure measured measuring measurement measurements dimension dimensions size sizes shape shapes form forms structure structures pattern patterns design designs style styles type types kind kinds sort sorts category categories class classes classification classifications group groups grouping ranking rank ranks order orders ordering arrangement arrangements organization organize organized organizing system systems method methods technique techniques approach approaches strategy strategies tactic tactics plan plans schedule schedules program programs procedure procedures process processes step steps stage stages phase phases era eras period periods age ages epoch epochs century centuries decade decades year years month months week weeks day days hour hours minute minutes second seconds moment moments instant instants twinkle blink interim meanwhile meantime simultaneously concurrently before during after later sooner sooner subsequently following preceding earlier afterwards beforehand prior previously formerly originally newly recently lately presently currently nowadays modern modernity ancient ancients olden bygone past present future yesterday today tomorrow morning afternoon evening night midnight noon dawn dusk sunset sunrise daybreak nightfall twilight gloaming start started starting beginning begin began begun commence commenced commencing commencement initiate initiated initiating initiation onset embark embarking embarkation outset outsetting open opened opening opening opening end ended ending finish finished finishing finalize finalized finalizing conclude concluded concluding conclusion conclusions terminate terminated terminating termination close closed closing complete completed completing completion accomplish accomplished accomplishing accomplishment fulfill fulfilled fulfilling fulfillment achieve achieved achieving achievement attain attained attaining attainment realize realized realizing realization happen happened happening occur occurred occurring occurrence occurrences event events happening happenings incident incidents accident accidents disaster disasters catastrophe catastrophes calamity calamities tragedy tragedies misfortune misfortunes mishap mishaps emergency emergencies crisis crises trouble troubles problem problems issue issues matter matters concern concerns worry worries anxiety anxieties stress stresses tension tensions pressure pressures strain strains burden burdens load loads weight weights difficulty difficulties hardship hardships challenge challenges struggle struggles fight fights battle battles war wars conflict conflicts combat combats engagement engagements encounter encounters skirmish skirmishes brawl brawls fight quarrel quarrels argument arguments dispute disputes disagreement disagreements clash clashes opposition oppositions resistance resistances rebel rebels rebellion rebellions revolt revolts revolution revolutions uprising uprisings protest protests demonstration demonstrations rally rallies march marches strike strikes boycott boycotts movement movements campaign campaigns crusade crusades mission missions quest quests journey journeys adventure adventures expedition expeditions exploration explorations voyage voyages trip trips tour tours visit visits travel travels vacation vacations holiday holidays getaway retreat retreats break breaks pause pauses rest rests interlude interludes interval intervals downtime leisure relaxation recreation recreations entertainment entertainments amusement amusements fun pleasure pleasures enjoyment enjoyments delight delights joy joys happiness contentment satisfaction gratification fulfillment thrill thrills excitement excitements adventure adventures suspense surprise surprises shock shocks awe awes wonder wonders marvel marvels astonishment amazement bewilderment confusion bafflement perplexity puzzlement mystery mysteries puzzle puzzles riddle riddles enigma enigmas conundrum problem problems question questions inquiry inquiries query queries investigation investigations research researches study studies analysis analyses examination examinations inspection inspections review reviews assessment assessments evaluation evaluations appraisal appraisals critique critiques judgment judgments verdict verdicts ruling rulings decision decisions choice choices option options alternative alternatives possibility possibilities probability probabilities chance chances opportunity opportunities prospect prospects outlook future hope hopes dream dreams aspiration aspirations goal goals ambition ambitions desire desires wish wishes want wants need needs requirement requirements demand demands necessity necessities essential essentials vital vitals priority priorities importance significance relevance relevances bearing bearings impact impacts effect effects influence influences consequence consequences result results outcome outcomes product products fruit fruits yield yields harvest harvests reward rewards prize prizes award awards medal medals trophy trophies cup cups title titles honor honors recognition recognitions praise praises commendation commendations compliment compliments tribute tributes salute salutes acknowledgment acknowledgments thanks thanks gratitude appreciation respect respects admiration admire admired admiring esteemed esteem esteemed reputation reputations fame fame renown notoriety celebrity celebrities star stars idol idols hero heroes heroine heroines model models example examples sample samples specimen specimens illustration illustrations instance instances case cases situation situations circumstance circumstances condition conditions state states status statuses position positions place places spot spots location locations site sites venue venues setting settings background backgrounds context contexts environment environments surroundings surrounding atmosphere atmospheres mood moods feeling feelings emotion emotions sentiment sentiments passion passions affection affections love loves hate hates anger angers fear fears terror terrors panic panics dread dreads horror horrors disgust disgusts revulsion revulsions loathing loathings hatred hates abhorrence resentment resentments envy envies jealousy jealousies pride prides arrogance haughtiness ego egos vanity vanities humility humbleness modesty shyness timidity boldness courage courageousness bravery valor heroism gallantry chivalry nobility nobilities virtue virtues vice vices sin sins evil evils wrongdoing wrong wrongs right rights duty duties obligation obligations responsibility responsibilities task tasks chore chores job jobs work works labor labors toil toils effort efforts attempt attempts try tries endeavor endeavors enterprise enterprises venture ventures undertaking undertakings project projects mission missions assignment assignments errand errands business businesses affair affairs matter matters concern concerns issue issues subject subjects topic topics theme themes idea ideas concept concepts notion notions thought thoughts opinion opinions view views perspective perspectives viewpoint viewpoints standpoint standpoints angle angles approach approaches stance stances position positions belief beliefs conviction convictions faith faiths trust trusts confidence confidences certainty certainties assurance assurances guarantee guarantees promise promises pledge pledges vow vows oath oaths commitment commitments dedication dedications devotion devotions loyalty loyalties allegiance allegiances faithfulness fidelity love loves friendship friendships companionship comradeship fellowship fellowships brotherhood brotherhoods sisterhood sisterhoods family families kin kindred relative relatives relation relations relationship relationships association associations connection connections tie ties bond bonds link links chain chains rope ropes string strings cord cords cable cables wire wires thread threads strand strands fiber fibers fabric fabrics cloth cloths material materials substance substances matter matters element elements compound compounds mixture mixtures solution solutions liquid liquids fluid fluids gas gases solid solids plasma plasmas powder powders dust dusts particle particles atom atoms molecule molecules cell cells tissue tissues organ organs system systems anatomy biology botany zoology chemistry physics geology astronomy physics mathematics arithmetic algebra geometry calculus statistics probability sociology psychology philosophy theology ethics economics politics political government governments state states country countries nation nations republic republics democracy democracies monarchy monarchies dictatorship dictatorships empire empires kingdom kingdoms realm realms territory territories province provinces region regions district districts county counties parish parishes city cities town towns village villages settlement settlements community communities society societies civilization civilizations culture cultures heritage heritages tradition traditions custom customs ritual rituals ceremony ceremonies celebration celebrations holiday holidays festival festivals event events occasion occasions anniversary anniversaries birthday birthdays graduation graduations promotion promotions retirement retirements wedding weddings funeral funerals memorial memorials service services worship worships prayer prayers chant chants hymn hymns psalm psalms scripture scriptures verse verses passage passages quotation quotations text texts writing writings literature literatures novel novels story stories tale tales narrative narratives fiction fictions nonfiction biography biographies autobiography autobiographies memoir memoirs essay essays article articles report reports document documents publication publications book books volume volumes chapter chapters page pages paragraph paragraphs sentence sentences phrase phrases word words letter letters character characters symbol symbols sign signs mark marks dot dots line lines stroke strokes brush brushes pen pens pencil pencils marker markers crayon crayons paint paints color colors hue hues shade shades tone tones tint tints red orange yellow green blue purple violet pink brown black white gray silver gold bronze copper steel iron metal metals mineral minerals gem gems jewel jewels diamond diamonds ruby rubies emerald emeralds sapphire sapphires pearl pearls opal opals topaz topazes amber jade ivory crystal crystals glass glasses ceramic ceramics pottery porcelain china china marble granite limestone sandstone slate quartz mica feldspar volcano volcanoes lava magma earthquake earthquakes tremor tremors avalanche avalanches landslide landslides flood floods drought droughts famine famines plague plagues epidemic epidemics pandemic pandemics outbreak outbreaks disease diseases infection infections sickness illness illnesses symptom symptoms cure cures remedy remedies medicine medicines drug drugs pill pills tablet tablets capsule capsules vaccine vaccines injection injections shot shots needle needles syringe syringes treatment treatments therapy therapies surgery surgeries operation operations procedure procedures recovery recoveries healing heal healed healing health healthy healthier healthiest sick sicker sickest wellness welfare wellbeing fitness fit fitter fittest strong stronger strongest weak weaker weakest powerful powerless mighty mightier mightiest tough tougher toughest hardy hardier hardiest resilient resistant durable lasting permanent temporary brief short long forever endless eternal infinite unbounded boundless limitless technology technologies technological digital analog electronic electronics device devices gadget gadgets tool tools instrument instruments equipment apparatus contraption mechanism mechanisms machine machines engine engines motor motors processor processors chip chips circuit circuits board boards component components system systems software hardware firmware program programs algorithm algorithms code codes data datas information internet web online offline website websites webpage webpages browser browsers search searched searching engine engines query queries result results link links url urls server servers database databases cloud clouds platform platforms operating system network networks router routers modem modems wifi wireless bluetooth signal signals connection connections protocol protocols interface interfaces api gateway gateways domain domains hosting hosted hosting service services cyber cybersecurity hacker hackers virus viruses malware spyware ransomware phishing firewall encryption decryption privacy security secure password passwords username usernames login logout signup register account accounts profile profiles user users administrator admin access permission permissions privilege privileges authentication authorization verification confirmation token tokens session sessions cookie cookies cache caches storage memory disk disks drive drives backup backups restore restores update updates upgrade upgrades version versions release releases download downloads upload uploads install installed installing installation uninstall configure configured configuring configuration setup setting settings preference preferences option options menu menus button buttons icon icons cursor cursors pointer pointers arrow arrows scrollbar window windows tab tabs panel panels dialog dialogs popup popups notification notifications alert alerts warning warnings error errors bug bugs glitch glitches issue issues problem problems patch patches fix fixes solution solutions feature features functionality function functions tool tools utility utilities widget widgets app apps application applications software programs game games entertainment streaming streamed streamer streamers podcast podcasts blog blogs vlog vlogs forum forums chat chats messenger messengers email emails texting texted videocall videocalls conference conferences meeting meetings webinar webinars seminar seminars workshop workshops course courses tutorial tutorials lesson lessons demo demos demonstration demonstrations example examples sample samples template templates model models prototype prototypes draft drafts document documents file files folder folders directory directories archive archives library libraries collection collections set sets list lists array arrays table tables row rows column columns cell cells field fields record records entry entries item items data datas information informations content contents context contexts subject subjects topic topics theme themes title titles heading headings header headers footer footers body bodies introduction introductions conclusion conclusions abstract abstracts summary summaries overview overviews outline outlines structure structures organization organizations format formats layout layouts design designs style styles theme themes color colors font fonts size sizes type types kind kinds variant variants version versions edition editions release releases issue issues number numbers volume volumes part parts chapter chapters section sections subsection subsections page pages paragraph paragraphs line lines word words character characters letter letters digit digits symbol symbols punctuation period comma colon semicolon dash hyphen apostrophe quotation question exclamation paren parens parenthesis parentheses bracket brackets brace braces tag tags markup html css javascript python java ruby code coding programmer programmers programming developer developers development developers software engineer engineers engineering computer computers laptop laptops desktop desktops workstation workstations terminal terminals server servers mainframe mainframes phone phones smartphone smartphones tablet tablets ipad iphone android mobile mobiles device devices gadget gadgets accessory accessories peripheral peripherals headset headphones speaker speakers microphone microphones webcam webcams camera cameras printer printers scanner scanners projector projectors keyboard keyboards mouse mice trackpad touchpad joystick gamepad controller controllers remote remotes cable cables cord cords wire wires plug plugs port ports adapter adapters charger chargers battery batteries power outlet outlets surge protector strip extension`;
+const DICT = new Set(WORD_LIST_RAW.toLowerCase().split(/\s+/).filter(Boolean));
+
+// =============== ITEMS DEFINITIONS ===============
+const F_KEYS = {
+  guiding: { id:'guiding', name:'Guiding F1', orig:'F1', desc:'Gain 2 random keys at end of turn.', cost:4, lore:'Salvaged from desk #42. Previous owner no longer needs it.' },
+  broken: { id:'broken', name:'Broken F2', orig:'F2', desc:'Random x0.7 - x1.5 mult on each word.', cost:3, lore:'It twitches when nobody is looking.' },
+  searching: { id:'searching', name:'Searching F3', orig:'F3', desc:'After every round, regain letters of a previously typed word.', cost:5, lore:'It searches. It always searches.' },
+  altF4: { id:'altF4', name:'Alt F4', orig:'F4', desc:'Words always score (50/50). Max length 7.', cost:4, lore:"ERROR: This key shouldn't exist. Company property. How did you get this?" },
+  refreshing: { id:'refreshing', name:'Refreshing F5', orig:'F5', desc:'After every round, refresh ALL letters (keep counts).', cost:4, lore:'Smells faintly of rain.' },
+  fullF6: { id:'fullF6', name:'Full F6', orig:'F6', desc:'Words 6+ letters: each extra letter = +x0.2 mult.', cost:5, lore:'Heavier than the others.' },
+  shifting: { id:'shifting', name:'Shifting F7', orig:'F7', desc:'Capitalised letters worth x3 instead of x2.', cost:4, lore:'Always slightly off-center.' },
+  safe: { id:'safe', name:'Safe F8', orig:'F8', desc:"First word's letters each round are returned.", cost:4, lore:'Cold to the touch.' },
+  compiling: { id:'compiling', name:'Compiling F9', orig:'F9', desc:'+5 points per non-repeating letter in word.', cost:4, lore:'It hums faintly.' },
+  plainF10: { id:'plainF10', name:'Plain F10', orig:'F10', desc:'+25 bonus points each turn.', cost:3, lore:'Suspiciously normal.' },
+  fullF11: { id:'fullF11', name:'Full F11', orig:'F11', desc:'All letters worth x2.', cost:6, lore:'Engraved with a number you can\'t read.' },
+  inspected: { id:'inspected', name:'Inspected F12', orig:'F12', desc:'5 random letters get x3 each turn (rerolls).', cost:5, lore:'It watches back.' },
+  lucky: { id:'lucky', name:'Lucky F13', orig:'F13', desc:'On round end: 50/50 to add OR remove 15 random letters.', cost:4, lore:'There is no F13. There is no F13.' },
+  freak: { id:'freak', name:'Freak Key', orig:'?', desc:'In every word, a random letter\'s scoring is x(0–10).', cost:5, lore:'WARNING: Prototype equipment. Use at own risk.' },
+  streak: { id:'streak', name:'Streak Key', orig:'F2', desc:'+5 bonus per word in a streak. Resets on invalid word.', cost:4, lore:'Glows brighter the longer you go.' },
+  omen: { id:'omen', name:'Omen Key', orig:'F0', desc:'Palindromes get +6 mult.', cost:4, lore:'The word reads your fate.' },
+  sniper: { id:'sniper', name:'Sniper Key', orig:'F12', desc:'Rare letters (X, Q, Z) worth x5.', cost:4, lore:'Steady. Patient.' },
+  common: { id:'common', name:'Common Key', orig:'F7', desc:'Common vowels (A, E, I, O) give +3 points.', cost:3, lore:'Worn smooth from use.' },
+  sTier: { id:'sTier', name:'S-Tier', orig:'F1', desc:'Every S in a word gains +15 points.', cost:4, lore:'S for Superior. Or Sinister.' },
+  soup: { id:'soup', name:'Alphabet Soup', orig:'F7', desc:'Words with 10+ letters: +200 flat after multiplying.', cost:5, lore:'Smells like crayons.' },
+  bookends: { id:'bookends', name:'Bookends', orig:'F8', desc:'If first letter == last letter, x3 word mult.', cost:4, lore:'Symmetry pleases the executives.' },
+  roulette: { id:'roulette', name:'Letter Roulette', orig:'F6', desc:'10% chance per word: x10 mult OR delete word + 5 letters.', cost:4, lore:'Spin. Pray.' },
+  fragile: { id:'fragile', name:'Fragile Key', orig:'F12', desc:'x5 points but invalid word = lose ALL day score.', cost:5, lore:'Do NOT drop.' },
+  eKey: { id:'eKey', name:'E', orig:'F3', desc:'Infinite E\'s.', cost:6, lore:'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEE' },
+  dalmatier: { id:'dalmatier', name:'Dalmatier Key', orig:'F101', desc:'After typing 100 letters, gain permanent x5 scoring.', cost:7, lore:'101 dots. Don\'t ask.' },
+  chipRecycler: { id:'chipRecycler', name:'Chip Recycler', orig:'F6', desc:'Every 6 words typed, upgrade a random letter (gain a chip).', cost:5, lore:'Crunch. Crunch. Crunch.' },
+  keycapCollector: { id:'keycapCollector', name:'Keycap Collector', orig:'F3', desc:'+15 points per word for each keycap equipped.', cost:5, lore:'They are all so beautiful.' }
+};
+
+const KEYCAPS = {
+  golden: { id:'golden', name:'Golden Keycap', desc:'Letter is worth x3 points.', cost:5 },
+  silver: { id:'silver', name:'Silver Keycap', desc:'Letter is worth x2 points.', cost:3 },
+  platinum: { id:'platinum', name:'Platinum Keycap', desc:'Letter is worth x5 points.', cost:8 },
+  negative: { id:'negative', name:'Negative Keycap', desc:'Letter returns 50 flat instead of multiplied score.', cost:3 },
+  recycling: { id:'recycling', name:'Recycling Keycap', desc:'50% chance this letter is not consumed.', cost:5 },
+  sharing: { id:'sharing', name:'Sharing Keycap', desc:'Using this letter grants 1 random vowel.', cost:4 },
+  greedy: { id:'greedy', name:'Greedy Keycap', desc:'Consumes 2 of this letter, gives +x5 mult.', cost:6 },
+  money: { id:'money', name:'Money Keycap', desc:'Gain $1 every time this letter is typed.', cost:5 },
+  lucky: { id:'lucky', name:'Lucky Keycap', desc:'10% chance to earn $10 when using this letter.', cost:5 },
+  first: { id:'first', name:'First Keycap', desc:'If letter is FIRST in word: +x4 mult.', cost:4 },
+  last: { id:'last', name:'Last Keycap', desc:'If letter is LAST in word: +x4 mult.', cost:4 },
+  antishift: { id:'antishift', name:'Anti-Shift Keycap', desc:'Letter worth x3 if NOT capitalised.', cost:4 },
+  abundant: { id:'abundant', name:'Abundant Keycap', desc:'Worth +2 points per copy of this letter you have.', cost:5 }
+};
+
+const MANAGERS = [
+  { id:'manager', name:'The Manager', tier:0, desc:'No effects. The default.', quote:'Welcome aboard. Don\'t fail.' },
+  { id:'thomas', name:'Thomas', tier:1, desc:'Nothing different.', quote:'This isn\'t mac donaldas.' },
+  { id:'helena', name:'Helena Syntax', tier:1, desc:'Words with 6+ letters give x2 points.', quote:'Knowledge is power.' },
+  { id:'clara', name:'Clara Compose', tier:1, desc:'Quota requirements reduced by 20%.', quote:'Take your time, quality over quantity.' },
+  { id:'veronica', name:'Veronica Strict', tier:2, desc:'Quota increased by 30%.', quote:'I expect excellence.' },
+  { id:'dennis', name:'Dennis Delay', tier:2, desc:'Lose 1 turn allotment for the day.', quote:'We need to process this properly...' },
+  { id:'penelope', name:'Penelope Pressure', tier:3, desc:'Only 4–6 letter words score.', quote:'Follow my exact instructions!' },
+  { id:'roberta', name:'Roberta Rigid', tier:3, desc:'No capitalization (Shift disabled).', quote:'We do things the old way here.' },
+  { id:'kevin', name:'Kevin Chaos', tier:3, desc:'A random letter is unusable each round.', quote:'Oops, my bad!' }
+];
+
+const MGR_FLAVOR = {
+  early: ['Great work! The executives will be pleased with this energy output!','Keep typing. Numbers go up. Everyone happy.','Standard quotas today. Easy money. Just like the brochure said.'],
+  mid: ['Between you and me... I heard screams from the basement yesterday.','Last manager left in a hurry. Didn\'t even take their thermos.','Why are there so many empty desks lately?'],
+  late: ['Listen, I don\'t know what they\'re using this word energy for, but the previous typist who failed quota... I found his keyboard in the incinerator.','RUN. Just type. Type FAST. Don\'t look behind you.','I tried to leave last night. The doors don\'t open from the inside anymore.']
+};
+
+const FONTS = [
+  { id:'tnr', cls:'font-tnr', name:'Times New Roman', desc:'Standard. Reliable. Default.', lore:'Employee #1. The Original. Before we knew what we were doing.', unlocked:true },
+  { id:'comic', cls:'font-comic', name:'Comic Sans', desc:'+1 starting letter of each vowel.', lore:'Employee #47. Maintained optimism until day 12. Remarkable.', unlocked:true,
+    apply: () => { ['A','E','I','O','U'].forEach(l => state.letters[l] = (state.letters[l]||0) + 1); } },
+  { id:'courier', cls:'font-courier', name:'Courier', desc:'Start with $5 extra.', lore:'Employee #19. Filed all documentation. Never raised concerns.', unlocked:true,
+    apply: () => { state.money += 5; } },
+  { id:'georgia', cls:'font-georgia', name:'Georgia', desc:'Start with a free common F-key.', lore:'Employee #88. Found a way out. Came back.', unlocked:true,
+    apply: () => { addFKey(['plainF10','common','streak'][Math.floor(Math.random()*3)], false); } },
+  { id:'impact', cls:'font-impact', name:'Impact', desc:'+5 letters of a random consonant.', lore:'Employee #003. Loud. Fast. Brief.', unlocked:true,
+    apply: () => { const cons='BCDFGHJKLMNPQRSTVWXYZ'; const l=cons[Math.floor(Math.random()*cons.length)]; state.letters[l]=(state.letters[l]||0)+5; } },
+  { id:'wing', cls:'font-wing', name:'Wingdings', desc:'???', lore:'Corrupted data. Personality fragmentation. Do not use.', unlocked:false }
+];
+
+const PACKS = [
+  { id:'sml_key', name:'Small Key Pack', desc:'15 random keys.', cost:3, kind:'key', amount:15 },
+  { id:'med_key', name:'Medium Key Pack', desc:'30 random keys.', cost:5, kind:'key', amount:30 },
+  { id:'lrg_key', name:'Large Key Pack', desc:'60 random keys.', cost:8, kind:'key', amount:60 },
+  { id:'meg_key', name:'Mega Key Pack', desc:'90 random keys.', cost:11, kind:'key', amount:90 },
+  { id:'sml_chip', name:'Small Chip Bag', desc:'2 chips, choose 1.', cost:4, kind:'chip', show:2, pick:1 },
+  { id:'med_chip', name:'Medium Chip Bag', desc:'5 chips, choose 1.', cost:6, kind:'chip', show:5, pick:1 },
+  { id:'lrg_chip', name:'Large Chip Bag', desc:'8 chips, choose 2.', cost:10, kind:'chip', show:8, pick:2 },
+  { id:'sml_fkey', name:'Small F-Key Bag', desc:'2 F-keys, choose 1.', cost:5, kind:'fkey', show:2, pick:1 },
+  { id:'med_fkey', name:'Medium F-Key Bag', desc:'5 F-keys, choose 1.', cost:8, kind:'fkey', show:5, pick:1 },
+  { id:'lrg_fkey', name:'Large F-Key Bag', desc:'8 F-keys, choose 2.', cost:14, kind:'fkey', show:8, pick:2 },
+  { id:'sml_cap', name:'Small Keycap Bag', desc:'2 keycaps, choose 1.', cost:5, kind:'cap', show:2, pick:1 },
+  { id:'med_cap', name:'Medium Keycap Bag', desc:'5 keycaps, choose 1.', cost:8, kind:'cap', show:5, pick:1 }
+];
+
+// =============== STATE ===============
+let state = null;
+
+function defaultState() {
+  return {
+    day: 1,
+    money: 4,
+    score: 0,
+    quota: 100,
+    shiftCharges: 2,
+    turnsLeft: 6,
+    letters: {},
+    chips: {},
+    fkeys: [],
+    keycaps: [],
+    manager: MANAGERS[0],
+    nextManagerForce: null,
+    font: 'tnr',
+    typedWordsThisDay: [],
+    flawless: true,
+    streak: 0,
+    wordCount: 0,
+    lettersTyped: 0,
+    permX: 1,
+    word: '',
+    shiftActive: false,
+    capsLockActive: false,
+    capsThisWord: [],
+    inspectedKeys: [],
+    disabledLetter: null,
+    safeUsedThisRound: false,
+    lastEarnings: 0,
+    gameOver: false,
+    won: false,
+    storyTriggered: { 5: false, 10: false, 15: false, 20: false }
+  };
+}
+
+// =============== LETTER FREQUENCY ===============
+const LETTER_WEIGHTS = {
+  A:9,B:2,C:3,D:4,E:13,F:2,G:3,H:4,I:8,J:1,K:1,L:5,M:3,
+  N:7,O:8,P:3,Q:1,R:6,S:6,T:9,U:4,V:1,W:2,X:1,Y:2,Z:1
+};
+
+function pickWeightedLetter() {
+  const total = Object.values(LETTER_WEIGHTS).reduce((a,b)=>a+b,0);
+  let r = Math.random() * total;
+  for (const [l,w] of Object.entries(LETTER_WEIGHTS)) {
+    r -= w; if (r <= 0) return l;
+  }
+  return 'E';
+}
+
+function dealStartingLetters(count) {
+  for (let i=0;i<count;i++) {
+    const l = pickWeightedLetter();
+    state.letters[l] = (state.letters[l]||0) + 1;
+  }
+}
+
+// =============== LOG ===============
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = 'logline ' + cls;
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 200) el.removeChild(el.firstChild);
+}
+
+// =============== FORMULAS ===============
+function quotaForDay(n) {
+  return Math.round(100 * (Math.pow(1.2, n) - 1));
+}
+function calcEarnings(roundScore, flawless) {
+  return Math.floor(roundScore / 10) + (flawless ? 5 : 0);
+}
+
+// =============== F-KEY / CAP HELPERS ===============
+function hasFKey(id) { return state.fkeys.some(f=>f.id===id); }
+function addFKey(id, log_=true) {
+  if (state.fkeys.length >= 5) { if(log_) log('No F-key slots free!','warn'); return false; }
+  if (hasFKey(id)) { if(log_) log('Already have '+F_KEYS[id].name,'warn'); return false; }
+  state.fkeys.push({...F_KEYS[id]});
+  if(log_) log(`+ F-Key acquired: ${F_KEYS[id].name}`,'good');
+  return true;
+}
+function addKeycap(capId, letter) {
+  if (state.keycaps.length >= 8) { log('No keycap slots free!','warn'); return false; }
+  state.keycaps.push({ capId, letter });
+  log(`+ Keycap installed: ${KEYCAPS[capId].name} on [${letter}]`,'good');
+  return true;
+}
+function getCapsForLetter(letter) {
+  return state.keycaps.filter(k => k.letter === letter);
+}
+
+// =============== UI: KEYBOARD ===============
+const KB_ROWS = [
+  'QWERTYUIOP'.split(''),
+  'ASDFGHJKL'.split(''),
+  'ZXCVBNM'.split('')
+];
+
+function renderKeyboard() {
+  const kb = document.getElementById('keyboard');
+  kb.innerHTML = '';
+  KB_ROWS.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'kb-row';
+    row.forEach(L => {
+      const count = state.letters[L] || 0;
+      const isInfinite = (L === 'E' && hasFKey('eKey'));
+      const k = document.createElement('div');
+      const chipLevel = state.chips[L] || 0;
+      const caps = getCapsForLetter(L);
+      let cls = 'kb-key';
+      if (count <= 0 && !isInfinite) cls += ' empty';
+      if (state.disabledLetter === L) cls += ' disabled';
+      if (caps.length) cls += ' has-cap';
+      if (chipLevel > 0) cls += ' chip-' + Math.min(chipLevel,4);
+      k.className = cls;
+      k.dataset.letter = L;
+      k.innerHTML = `${L}<span class="count">${isInfinite?'∞':count}</span>` +
+                    (caps.length ? `<span class="cap-mark">★${caps.length}</span>` : '') +
+                    (chipLevel ? `<span class="chip-mark">+${chipLevel}</span>` : '');
+      k.addEventListener('click', () => handleKeyPress(L));
+      div.appendChild(k);
+    });
+    kb.appendChild(div);
+  });
+}
+
+// =============== UI: STATUS BAR ===============
+function renderStatus() {
+  const bar = document.getElementById('statusBar');
+  const dayPhase = state.day <= 5 ? 'NORMAL' : state.day <= 10 ? 'STRANGE' : state.day <= 15 ? 'WRONG' : 'HORROR';
+  const phaseTag = state.day <= 5 ? '' : state.day <= 10 ? 'warn' : state.day <= 15 ? 'bad' : 'bad';
+  bar.innerHTML = `
+    <div class="pill"><span>DAY</span><strong>${state.day}</strong></div>
+    <div class="pill ${state.score >= state.quota ? 'good':'warn'}">
+      <span>SCORE</span><strong>${state.score}</strong> / ${state.quota}
+    </div>
+    <div class="pill"><span>$</span><strong>${state.money}</strong></div>
+    <div class="pill ${state.turnsLeft<=2?'danger':''}"><span>TURNS</span><strong>${state.turnsLeft}</strong></div>
+    <div class="pill"><span>STREAK</span><strong>${state.streak}</strong></div>
+    <div class="pill"><span>MGR</span><strong>${state.manager.name}</strong></div>
+    ${phaseTag?`<span class="tag ${phaseTag}">${dayPhase}</span>`:''}
+  `;
+  document.getElementById('dayDisplay').textContent = state.day;
+}
+
+// =============== UI: WORD ===============
+function renderWord() {
+  const d = document.getElementById('wordDisplay');
+  if (!state.word) {
+    d.innerHTML = '<span class="cursor">_</span>';
+  } else {
+    let html = '';
+    for (let i=0;i<state.word.length;i++) {
+      const c = state.word[i];
+      const isCap = state.capsThisWord[i];
+      html += `<span style="${isCap?'color:#fff;text-shadow:0 0 8px var(--glow);':''}">${isCap?c.toUpperCase():c.toLowerCase()}</span>`;
+    }
+    html += '<span class="cursor">_</span>';
+    d.innerHTML = html;
+  }
+
+  // Shift button
+  const sb = document.getElementById('shiftBtn');
+  if (sb) {
+    sb.textContent = `⇧ SHIFT (${state.shiftCharges})`;
+    sb.style.background = state.shiftActive ? 'var(--gold-text)' : 'var(--os-interface)';
+    sb.style.color = state.shiftActive ? '#000' : 'var(--gold-text)';
+  }
+
+  // Caps Lock button — now exists in HTML
+  const cb = document.getElementById('capsBtn');
+  if (cb) {
+    cb.textContent = `⇪ CAPS${state.capsLockActive ? ' ON' : ' OFF'}`;
+    cb.style.background = state.capsLockActive ? 'var(--gold-text)' : 'var(--os-interface)';
+    cb.style.color = state.capsLockActive ? '#000' : 'var(--gold-text)';
+  }
+
+  // hint
+  const hint = document.getElementById('wordHint');
+  let hints = [];
+  if (state.manager.id === 'penelope') hints.push('4–6 letters only');
+  if (state.manager.id === 'roberta') hints.push('No capitals');
+  if (state.disabledLetter) hints.push(`[${state.disabledLetter}] is broken!`);
+  if (hasFKey('altF4')) hints.push('Max 7 letters (Alt F4)');
+  hint.textContent = hints.join(' • ');
+}
+
+// =============== UI: F-KEYS / KEYCAPS / CHIPS ===============
+function renderFKeys() {
+  const list = document.getElementById('fkeyList');
+  document.getElementById('fkeyCount').textContent = state.fkeys.length;
+  if (!state.fkeys.length) { list.innerHTML = '<div class="muted">No F-keys yet.</div>'; return; }
+  list.innerHTML = '';
+  state.fkeys.forEach((f,i) => {
+    const item = document.createElement('div');
+    item.className = 'list-item fkey';
+    item.innerHTML = `
+      <div class="row">
+        <div class="name">${f.name}</div>
+        <button class="btn tiny ghost" data-i="${i}">SELL $${Math.max(1,Math.floor(f.cost/2))}</button>
+      </div>
+      <div class="desc">${f.desc}</div>
+    `;
+    item.querySelector('button').addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = +e.target.dataset.i;
+      const sold = state.fkeys.splice(idx,1)[0];
+      const refund = Math.max(1,Math.floor(sold.cost/2));
+      state.money += refund;
+      log(`Sold ${sold.name} for $${refund}.`,'info');
+      renderAll();
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderKeycapsList() {
+  const list = document.getElementById('keycapList');
+  document.getElementById('capCount').textContent = state.keycaps.length;
+  if (!state.keycaps.length) { list.innerHTML = '<div class="muted">No keycaps yet.</div>'; return; }
+  list.innerHTML = '';
+  state.keycaps.forEach((c,i) => {
+    const def = KEYCAPS[c.capId];
+    const item = document.createElement('div');
+    item.className = 'list-item keycap';
+    item.innerHTML = `
+      <div class="row">
+        <div class="name">${def.name} <span class="tag info">${c.letter}</span></div>
+        <button class="btn tiny ghost" data-i="${i}">REMOVE $${Math.max(1,Math.floor(def.cost/2))}</button>
+      </div>
+      <div class="desc">${def.desc}</div>
+    `;
+    item.querySelector('button').addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = +e.target.dataset.i;
+      const sold = state.keycaps.splice(idx,1)[0];
+      const refund = Math.max(1,Math.floor(KEYCAPS[sold.capId].cost/2));
+      state.money += refund;
+      log(`Removed ${KEYCAPS[sold.capId].name} from [${sold.letter}], refunded $${refund}.`,'info');
+      renderAll();
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderAll() {
+  renderKeyboard();
+  renderStatus();
+  renderWord();
+  renderFKeys();
+  renderKeycapsList();
+}
+
+// =============== INPUT ===============
+function handleKeyPress(L) {
+  if (state.gameOver) return;
+  L = L.toUpperCase();
+  if (state.manager.id === 'roberta' && (state.shiftActive || state.capsLockActive)) {
+    log('Roberta forbids capitalization. Shift/Caps cancelled.','warn');
+    state.shiftActive = false;
+    state.capsLockActive = false;
+  }
+  if (state.disabledLetter === L) { log(`[${L}] is broken today!`,'bad'); return; }
+  const isInfinite = (L === 'E' && hasFKey('eKey'));
+  const have = state.letters[L] || 0;
+  if (!isInfinite && have <= 0) { log(`Out of [${L}]`,'warn'); return; }
+  if (hasFKey('altF4') && state.word.length >= 7) { log('Alt F4: max length 7','warn'); return; }
+  if (state.word.length >= 25) return;
+
+  // Determine if this letter should be capitalised
+  const capitalise = state.shiftActive || state.capsLockActive;
+
+  if (!isInfinite) state.letters[L] = have - 1;
+  state.word += L;
+  state.capsThisWord.push(capitalise);
+
+  // Shift is one-shot; caps lock persists
+  if (state.shiftActive) state.shiftActive = false;
+
+  renderWord();
+  renderKeyboard();
+}
+
+function handleBackspace() {
+  if (!state.word) return;
+  const idx = state.word.length - 1;
+  const L = state.word[idx].toUpperCase();
+  const isInfinite = (L === 'E' && hasFKey('eKey'));
+  if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
+  if (state.capsThisWord[idx]) state.shiftCharges = (state.shiftCharges || 0) + 1;
+  state.word = state.word.slice(0, -1);
+  state.capsThisWord.pop();
+  renderWord();
+  renderKeyboard();
+}
+function handleClear() {
+  for (let i = 0; i < state.word.length; i++) {
+    const L = state.word[i].toUpperCase();
+    const isInfinite = (L === 'E' && hasFKey('eKey'));
+    if (!isInfinite) state.letters[L] = (state.letters[L] || 0) + 1;
+    if (state.capsThisWord[i]) state.shiftCharges = (state.shiftCharges || 0) + 1;
+  }
+  state.word = '';
+  state.capsThisWord = [];
+  state.shiftActive = false;
+  renderWord();
+  renderKeyboard();
+}
+function handleShift() {
+  if (state.manager.id === 'roberta') { log('Roberta forbids capitals.','bad'); return; }
+  state.shiftActive = !state.shiftActive;
+  state.shiftCharges -= 1
+  renderWord();
+}
+function handleCapsLock() {
+  if (state.manager.id === 'roberta') { log('Roberta forbids capitals.','bad'); return; }
+  state.capsLockActive = !state.capsLockActive;
+  state.shiftActive = false; // cancel shift when toggling caps
+  renderWord();
+}
+
+// =============== WORD VALIDATION ===============
+function isValidWord(w) {
+  if (hasFKey('altF4')) return Math.random() < 0.5;
+  return DICT.has(w.toLowerCase());
+}
+
+// =============== SCORING ===============
+function letterPoints(L) {
+  const lvl = state.chips[L] || 0;
+  return Math.pow(2, lvl);
+}
+
+function submitWord() {
+  state.shiftActive = false;
+  if (state.gameOver) return;
+  if (!state.word) return;
+  if (state.turnsLeft <= 0) { log('No turns left! End the day.','bad'); return; }
+
+  const word = state.word;
+  const wordLower = word.toLowerCase();
+  const valid = isValidWord(wordLower);
+
+  let blockedReason = null;
+  if (state.manager.id === 'penelope' && (word.length < 4 || word.length > 6)) {
+    blockedReason = 'Penelope demands 4–6 letter words.';
+  }
+
+  if (!valid || blockedReason) {
+    spendLetters(word);
+    state.flawless = false;
+    state.streak = 0;
+    if (hasFKey('fragile')) {
+      log('💀 FRAGILE KEY: Invalid word — ALL day score lost!','bad');
+      state.score = 0;
+    }
+    log(blockedReason || `"${word}" — not a valid word. Letters consumed.`,'bad');
+    flashScore(0, true);
+    state.turnsLeft--;
+    state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+    afterWordCleanup();
+    renderAll();
+    checkDayEnd();
+    return;
+  }
+
+  let totalLetterPoints = 0;
+  let mult = 1;
+  let bonus = 0;
+  let earnedMoney = 0;
+  let detailLog = [];
+
+  let rouletteForce = null;
+  if (hasFKey('roulette') && Math.random() < 0.10) {
+    if (Math.random() < 0.5) { rouletteForce = 'good'; detailLog.push('Roulette: x10!'); }
+    else { rouletteForce = 'bad'; detailLog.push('Roulette: word VOID + 5 letters lost'); }
+  }
+
+  if (rouletteForce === 'bad') {
+    spendLetters(word);
+    for (let i=0;i<5;i++) removeRandomLetter();
+    log(`"${word}" — Letter Roulette devoured it.`,'bad');
+    flashScore(0,true);
+    state.streak = 0;
+    state.flawless = false;
+    state.turnsLeft--;
+    state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+    afterWordCleanup();
+    renderAll();
+    checkDayEnd();
+    return;
+  }
+
+  let perLetterMult = new Array(word.length).fill(1);
+  let perLetterBonus = new Array(word.length).fill(0);
+  let negativeOverride = false;
+  let greedyMult = 1;
+  let recyclingRefunds = {};
+
+  for (let i=0;i<word.length;i++) {
+    const L = word[i].toUpperCase();
+    const isCap = state.capsThisWord[i];
+    let lp = letterPoints(L);
+
+    if (hasFKey('common') && 'AEIO'.includes(L)) lp += 3;
+    if (hasFKey('sTier') && L === 'S') lp += 15;
+    if (hasFKey('sniper') && 'XQZ'.includes(L)) lp *= 5;
+    if (hasFKey('compiling')) {
+      const occurrences = word.toUpperCase().split('').filter(x=>x===L).length;
+      if (occurrences === 1) lp += 5;
+    }
+    if (isCap) lp *= (hasFKey('shifting') ? 3 : 2);
+    if (hasFKey('inspected') && state.inspectedKeys.includes(L)) lp *= 3;
+
+    const caps = getCapsForLetter(L);
+    for (const cap of caps) {
+      switch(cap.capId) {
+        case 'golden': perLetterMult[i] *= 3; break;
+        case 'silver': perLetterMult[i] *= 2; break;
+        case 'platinum': perLetterMult[i] *= 5; break;
+        case 'negative': negativeOverride = true; break;
+        case 'recycling':
+          if (Math.random() < 0.5) { recyclingRefunds[L] = (recyclingRefunds[L]||0) + 1; }
+          break;
+        case 'greedy': greedyMult *= 5; break;
+        case 'money': earnedMoney += 1; break;
+        case 'lucky': if (Math.random()<0.10) earnedMoney += 10; break;
+        case 'first': if (i === 0) perLetterMult[i] *= 4; break;
+        case 'last': if (i === word.length-1) perLetterMult[i] *= 4; break;
+        case 'antishift': if (!isCap) perLetterMult[i] *= 3; break;
+        case 'abundant': perLetterBonus[i] += 2 * (state.letters[L]||0); break;
+      }
+    }
+
+    totalLetterPoints += (lp * perLetterMult[i]) + perLetterBonus[i];
+  }
+
+  if (hasFKey('freak') && word.length > 0) {
+    const idx = Math.floor(Math.random()*word.length);
+    const factor = Math.random() * 10;
+    const L = word[idx].toUpperCase();
+    let lp = letterPoints(L);
+    const oldContribution = (lp * perLetterMult[idx]) + perLetterBonus[idx];
+    const adj = oldContribution * (factor - 1);
+    totalLetterPoints += adj;
+    detailLog.push(`Freak Key on [${L}] x${factor.toFixed(1)}`);
+  }
+
+  if (hasFKey('bookends') && word.length >= 2 && word[0].toUpperCase()===word[word.length-1].toUpperCase()) {
+    mult *= 3; detailLog.push('Bookends x3');
+  }
+  if (hasFKey('omen') && word.length >= 3 && wordLower === wordLower.split('').reverse().join('')) {
+    mult += 6; detailLog.push('Omen +6 mult');
+  }
+  if (state.manager.id === 'helena' && word.length >= 6) { mult *= 2; detailLog.push('Helena x2'); }
+  if (hasFKey('fullF6') && word.length > 6) {
+    const m = Math.pow(1.2, word.length - 6);
+    mult *= m; detailLog.push(`Full F6 x${m.toFixed(2)}`);
+  }
+  if (hasFKey('fullF11')) { mult *= 2; detailLog.push('Full F11 x2'); }
+  if (hasFKey('broken')) { const m = 0.7 + Math.random() * 0.8; mult *= m; detailLog.push(`Broken x${m.toFixed(2)}`); }
+  if (greedyMult !== 1) { mult *= greedyMult; detailLog.push(`Greedy x${greedyMult}`); }
+  if (rouletteForce === 'good') { mult *= 10; }
+  if (state.permX !== 1) { mult *= state.permX; detailLog.push(`Permanent x${state.permX}`); }
+
+  let raw = totalLetterPoints * mult;
+  if (negativeOverride) { raw = 50; detailLog.push('Negative cap — flat 50'); }
+
+  if (hasFKey('plainF10')) { bonus += 25; detailLog.push('+25 (Plain F10)'); }
+  if (hasFKey('streak')) { bonus += 5 * state.streak; if (state.streak>0) detailLog.push(`Streak +${5*state.streak}`); }
+  if (hasFKey('keycapCollector')) { const b = 15 * state.keycaps.length; bonus += b; if(b)detailLog.push(`Collector +${b}`); }
+  if (hasFKey('soup') && word.length >= 10) { bonus += 200; detailLog.push('+200 (Soup)'); }
+
+  let finalScore = Math.round(raw + bonus);
+  if (finalScore < 0) finalScore = 0;
+
+  state.score += finalScore;
+  state.streak += 1;
+  state.wordCount += 1;
+  state.lettersTyped += word.length;
+
+  spendLetters(word, recyclingRefunds);
+
+  for (let i=0;i<word.length;i++) {
+    const L = word[i].toUpperCase();
+    const caps = getCapsForLetter(L);
+    for (const cap of caps) {
+      if (cap.capId === 'sharing') {
+        const vow = 'AEIOU'[Math.floor(Math.random()*5)];
+        state.letters[vow] = (state.letters[vow]||0) + 1;
+      }
+    }
+  }
+
+  if (earnedMoney) { state.money += earnedMoney; log(`Caps earned $${earnedMoney}`,'good'); }
+
+  if (hasFKey('dalmatier') && state.permX === 1 && state.lettersTyped >= 100) {
+    state.permX = 5;
+    log('🐾 DALMATIER ACTIVATED — Permanent x5!','good');
+  }
+
+  if (hasFKey('chipRecycler') && state.wordCount % 6 === 0) {
+    const letter = pickWeightedLetter();
+    state.chips[letter] = (state.chips[letter]||0) + 1;
+    log(`Chip Recycler: [${letter}] upgraded! (chip lvl ${state.chips[letter]})`,'good');
+  }
+
+  state.typedWordsThisDay.push(word);
+  log(`"${word}" → ${finalScore} ${detailLog.length?'['+detailLog.join(', ')+']':''}`,'good');
+  flashScore(finalScore, false);
+
+  state.word=''; state.capsThisWord=[]; state.shiftActive=false;
+  state.turnsLeft--;
+  afterWordCleanup();
+  renderAll();
+  checkDayEnd();
+}
+
+function spendLetters(word, refunds={}) {
+  for (let i=0;i<word.length;i++) {
+    const L = word[i].toUpperCase();
+    if (L === 'E' && hasFKey('eKey')) continue;
+    state.letters[L] = (state.letters[L]||0) - 1;
+    if (state.letters[L] < 0) state.letters[L] = 0;
+  }
+  for (const cap of state.keycaps) {
+    if (cap.capId === 'greedy') {
+      const L = cap.letter;
+      const occ = word.toUpperCase().split('').filter(x=>x===L).length;
+      if (occ > 0) {
+        state.letters[L] = Math.max(0, (state.letters[L]||0) - occ);
+      }
+    }
+  }
+  for (const [L,n] of Object.entries(refunds)) {
+    state.letters[L] = (state.letters[L]||0) + n;
+  }
+}
+
+function removeRandomLetter() {
+  const pool = Object.entries(state.letters).filter(([,v])=>v>0);
+  if (!pool.length) return;
+  const [L] = pool[Math.floor(Math.random()*pool.length)];
+  state.letters[L]--;
+}
+
+function afterWordCleanup() {
+  if (hasFKey('inspected')) rollInspected();
+}
+
+function rollInspected() {
+  const pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  state.inspectedKeys = [];
+  while (state.inspectedKeys.length < 5) {
+    const L = pool[Math.floor(Math.random()*pool.length)];
+    if (!state.inspectedKeys.includes(L)) state.inspectedKeys.push(L);
+  }
+  log('🔍 Inspected: '+state.inspectedKeys.join(' '),'info');
+}
+
+// =============== FLASH ===============
+function flashScore(n, bad) {
+  const f = document.createElement('div');
+  f.className = 'score-flash' + (bad?' bad':'');
+  f.textContent = bad ? 'INVALID' : '+' + n;
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(), 1400);
+}
+
+// =============== DAY FLOW ===============
+function checkDayEnd() {
+  if (state.turnsLeft <= 0) {
+    log('No turns left.','warn');
+    setTimeout(endDay, 600);
+  }
+  const total = Object.values(state.letters).reduce((a,b)=>a+b,0);
+  if (total === 0 && !hasFKey('eKey') && !hasFKey('refreshing') && state.score >= state.quota) {
+    log('No letters left.','warn');
+    setTimeout(endDay, 600);
+  }
+}
+
+function endDay() {
+  if (state.gameOver) return;
+
+  if (hasFKey('guiding')) {
+    for (let i=0;i<2;i++) { const L=pickWeightedLetter(); state.letters[L]=(state.letters[L]||0)+1; }
+    log('Guiding F1: +2 random keys.','info');
+  }
+  if (hasFKey('searching') && state.typedWordsThisDay.length) {
+    const w = state.typedWordsThisDay[Math.floor(Math.random()*state.typedWordsThisDay.length)];
+    for (const c of w.toUpperCase()) state.letters[c] = (state.letters[c]||0)+1;
+    log(`Searching F3: refunded "${w}".`,'info');
+  }
+  if (hasFKey('refreshing')) {
+    const total = Object.values(state.letters).reduce((a,b)=>a+b,0);
+    state.letters = {};
+    for (let i=0;i<total;i++) {
+      const L = pickWeightedLetter();
+      state.letters[L] = (state.letters[L]||0) + 1;
+    }
+    log(`Refreshing F5: shuffled ${total} letters.`,'info');
+  }
+  if (hasFKey('lucky')) {
+    if (Math.random() < 0.5) {
+      for (let i=0;i<15;i++) { const L=pickWeightedLetter(); state.letters[L]=(state.letters[L]||0)+1; }
+      log('Lucky F13: +15 keys!','good');
+    } else {
+      for (let i=0;i<15;i++) removeRandomLetter();
+      log('Lucky F13: -15 keys...','bad');
+    }
+  }
+
+  if (state.score < state.quota) {
+    return failDay();
+  }
+
+  const earnings = calcEarnings(state.score, state.flawless);
+  state.lastEarnings = earnings;
+  state.money += earnings;
+  log(`Day ${state.day} CLEARED. Earned $${earnings}${state.flawless?' (FLAWLESS +5)':''}`,'good');
+
+  showShop();
+}
+
+function failDay() {
+  state.gameOver = true;
+  showFailDialogue();
+}
+
+// =============== MANAGER GENERATION ===============
+function pickManagerForDay(day) {
+  if (state.nextManagerForce) {
+    const m = MANAGERS.find(x=>x.id===state.nextManagerForce);
+    state.nextManagerForce = null;
+    if (m) return m;
+  }
+  if (day === 1) return MANAGERS[0];
+  let pool;
+  if (day <= 3) pool = MANAGERS.filter(m => m.tier <= 1);
+  else if (day <= 7) pool = MANAGERS.filter(m => m.tier <= 2);
+  else pool = MANAGERS.filter(m => m.tier <= 3);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// =============== SHOP ===============
+function showShop() {
+  const fkeyChoices = pickRandomFKeys(2);
+  const capChoices = pickRandomCaps(2);
+  const chipChoices = pickRandomChips(3);
+  const packChoices = [...PACKS].sort(()=>Math.random()-0.5).slice(0,4);
+
+  const purchased = new Set();
+
+  function renderShop() {
+    let html = `
+      <div class="muted" style="margin-bottom:10px;">
+        End of day ${state.day}. Quota cleared. <strong style="color:var(--good)">+$${state.lastEarnings}</strong> earned.
+        Spend wisely. Tomorrow's quota: <strong>${quotaForDay(state.day+1)}</strong>.
+      </div>
+      <div class="dialogue lore">
+        <div class="speaker">— ${state.manager.name}</div>
+        <div class="text">${getMgrFlavor()}</div>
+      </div>
+      <div class="card"><h3>F-KEYS</h3><div class="shop-grid">`;
+    fkeyChoices.forEach((id,i) => {
+      const f = F_KEYS[id];
+      const tag = 'shop-fkey-'+i;
+      const can = state.money >= f.cost && !hasFKey(id) && state.fkeys.length < 5;
+      html += `<div class="shop-item fkey ${can?'':'cant-afford'} ${purchased.has(tag)?'purchased':''}">
+        <div class="item-name">${f.name}</div>
+        <div class="item-desc">${f.desc}</div>
+        <div class="muted" style="font-size:9px;font-style:italic;">${f.lore}</div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+          <div class="item-cost">$${f.cost}</div>
+          <button class="btn small" data-buy-fkey="${id}" data-tag="${tag}" ${(!can||purchased.has(tag))?'disabled':''}>BUY</button>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+
+    html += `<div class="card" style="margin-top:8px;"><h3>KEYCAPS</h3><div class="shop-grid">`;
+    capChoices.forEach((id,i) => {
+      const c = KEYCAPS[id];
+      const tag = 'shop-cap-'+i;
+      const can = state.money >= c.cost && state.keycaps.length < 8;
+      html += `<div class="shop-item keycap ${can?'':'cant-afford'} ${purchased.has(tag)?'purchased':''}">
+        <div class="item-name">${c.name}</div>
+        <div class="item-desc">${c.desc}</div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+          <div class="item-cost">$${c.cost}</div>
+          <button class="btn small" data-buy-cap="${id}" data-tag="${tag}" ${(!can||purchased.has(tag))?'disabled':''}>BUY</button>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+
+    html += `<div class="card" style="margin-top:8px;"><h3>CHIPS (Letter Upgrades)</h3><div class="shop-grid">`;
+    chipChoices.forEach((L,i) => {
+      const tag = 'shop-chip-'+i;
+      const cost = 2 + (state.chips[L]||0);
+      const can = state.money >= cost;
+      html += `<div class="shop-item chip ${can?'':'cant-afford'} ${purchased.has(tag)?'purchased':''}">
+        <div class="item-name">CHIP — [${L}]</div>
+        <div class="item-desc">Upgrade [${L}] to lvl ${(state.chips[L]||0)+1} (worth ${Math.pow(2,(state.chips[L]||0)+1)} pts each).</div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+          <div class="item-cost">$${cost}</div>
+          <button class="btn small" data-buy-chip="${L}" data-tag="${tag}" data-cost="${cost}" ${(!can||purchased.has(tag))?'disabled':''}>BUY</button>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+
+    html += `<div class="card" style="margin-top:8px;"><h3>PACKS</h3><div class="shop-grid">`;
+    packChoices.forEach((p,i) => {
+      const tag = 'shop-pack-'+i;
+      const can = state.money >= p.cost;
+      html += `<div class="shop-item pack ${can?'':'cant-afford'} ${purchased.has(tag)?'purchased':''}">
+        <div class="item-name">${p.name}</div>
+        <div class="item-desc">${p.desc}</div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;">
+          <div class="item-cost">$${p.cost}</div>
+          <button class="btn small" data-buy-pack="${p.id}" data-tag="${tag}" ${(!can||purchased.has(tag))?'disabled':''}>OPEN</button>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+
+    html += `
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+        <button class="btn" id="shopRerollBtn">REROLL ($${rerollCost()})</button>
+        <button class="btn good" id="shopNextBtn">NEXT DAY ▶</button>
+      </div>
+    `;
+    openModal('SHOP — DAY '+state.day+' COMPLETE',html);
+
+    document.querySelectorAll('[data-buy-fkey]').forEach(b => b.onclick = () => {
+      const id = b.dataset.buyFkey; const tag = b.dataset.tag;
+      const f = F_KEYS[id]; if (state.money < f.cost) return;
+      if (hasFKey(id)) { log('Already own '+f.name,'warn'); return; }
+      if (state.fkeys.length >= 5) { log('No F-key slots free','warn'); return; }
+      state.money -= f.cost; addFKey(id);
+      purchased.add(tag); renderShop();
+    });
+    document.querySelectorAll('[data-buy-cap]').forEach(b => b.onclick = () => {
+      const id = b.dataset.buyCap; const tag = b.dataset.tag;
+      const c = KEYCAPS[id]; if (state.money < c.cost) return;
+      if (state.keycaps.length >= 8) { log('No cap slots free','warn'); return; }
+      assignCapModal(id, () => {
+        state.money -= c.cost;
+        purchased.add(tag); renderShop();
+      });
+    });
+    document.querySelectorAll('[data-buy-chip]').forEach(b => b.onclick = () => {
+      const L = b.dataset.buyChip; const cost = +b.dataset.cost; const tag = b.dataset.tag;
+      if (state.money < cost) return;
+      state.money -= cost;
+      state.chips[L] = (state.chips[L]||0) + 1;
+      log(`Chip installed on [${L}] — now lvl ${state.chips[L]}`,'good');
+      purchased.add(tag); renderShop();
+    });
+    document.querySelectorAll('[data-buy-pack]').forEach(b => b.onclick = () => {
+      const id = b.dataset.buyPack; const tag = b.dataset.tag;
+      const pack = PACKS.find(p=>p.id===id);
+      if (state.money < pack.cost) return;
+      state.money -= pack.cost;
+      purchased.add(tag);
+      openPack(pack, () => renderShop());
+    });
+    document.getElementById('shopRerollBtn').onclick = () => {
+      const c = rerollCost();
+      if (state.money < c) { log('Not enough $','warn'); return; }
+      state.money -= c;
+      state.rerollCount = (state.rerollCount||0) + 1;
+      const f1 = pickRandomFKeys(2); fkeyChoices.length = 0; fkeyChoices.push(...f1);
+      const c1 = pickRandomCaps(2); capChoices.length = 0; capChoices.push(...c1);
+      const ch1 = pickRandomChips(3); chipChoices.length = 0; chipChoices.push(...ch1);
+      const p1 = [...PACKS].sort(()=>Math.random()-0.5).slice(0,4); packChoices.length=0; packChoices.push(...p1);
+      purchased.clear();
+      renderShop();
+    };
+    document.getElementById('shopNextBtn').onclick = () => {
+      closeModal();
+      nextDay();
+    };
+  }
+  state.rerollCount = 0;
+  renderShop();
+}
+
+function rerollCost() { return 2 + (state.rerollCount||0); }
+
+function pickRandomFKeys(n) {
+  const owned = new Set(state.fkeys.map(f=>f.id));
+  const pool = Object.keys(F_KEYS).filter(k => !owned.has(k));
+  const out = [];
+  while (out.length < n && pool.length) {
+    const idx = Math.floor(Math.random()*pool.length);
+    out.push(pool.splice(idx,1)[0]);
+  }
+  return out;
+}
+function pickRandomCaps(n) {
+  const pool = Object.keys(KEYCAPS).slice();
+  const out = [];
+  for (let i=0;i<n && pool.length;i++) {
+    out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  }
+  return out;
+}
+function pickRandomChips(n) {
+  const pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const out = [];
+  for (let i=0;i<n;i++) out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  return out;
+}
+
+function assignCapModal(capId, onPlaced) {
+  const c = KEYCAPS[capId];
+  let html = `<div class="muted">Choose a letter to install <strong>${c.name}</strong> on:</div>
+    <div class="muted" style="font-size:11px;">${c.desc}</div>
+    <div class="assign-grid" id="assignGrid"></div>
+    <div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;">
+      <button class="btn ghost" id="cancelAssign">CANCEL</button>
+    </div>`;
+  pushModal('INSTALL ' + c.name.toUpperCase(), html);
+  const grid = document.getElementById('assignGrid');
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(L => {
+    const div = document.createElement('div');
+    div.className = 'assign-letter' + (getCapsForLetter(L).length?' has-cap':'');
+    div.textContent = L;
+    div.addEventListener('click', () => {
+      addKeycap(capId, L);
+      popModal();
+      onPlaced && onPlaced();
+    });
+    grid.appendChild(div);
+  });
+  document.getElementById('cancelAssign').onclick = () => popModal();
+}
+
+function openPack(pack, onDone) {
+  if (pack.kind === 'key') {
+    for (let i=0;i<pack.amount;i++) { const L=pickWeightedLetter(); state.letters[L]=(state.letters[L]||0)+1; }
+    log(`Opened ${pack.name}: +${pack.amount} keys.`,'good');
+    onDone && onDone();
+    return;
+  }
+  let pool = [];
+  if (pack.kind === 'fkey') pool = pickRandomFKeys(pack.show);
+  if (pack.kind === 'cap') pool = pickRandomCaps(pack.show);
+  if (pack.kind === 'chip') pool = pickRandomChips(pack.show);
+  const selected = new Set();
+
+  function render() {
+    let html = `<div class="muted">Pick ${pack.pick} from ${pack.show}:</div><div class="choice-grid">`;
+    pool.forEach((id,i) => {
+      let title='', desc='';
+      if (pack.kind==='fkey') { title=F_KEYS[id].name; desc=F_KEYS[id].desc; }
+      if (pack.kind==='cap') { title=KEYCAPS[id].name; desc=KEYCAPS[id].desc; }
+      if (pack.kind==='chip') { title='[ '+id+' ] CHIP'; desc=`Upgrade [${id}] to lvl ${(state.chips[id]||0)+1}.`; }
+      const sel = selected.has(i);
+      html += `<div class="choice-item ${sel?'selected':''}" data-i="${i}">
+        <div style="color:var(--gold-text);font-weight:bold;font-size:12px;">${title}</div>
+        <div class="muted" style="font-size:10px;">${desc}</div>
+      </div>`;
+    });
+    html += `</div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:10px;">
+        <button class="btn" id="confirmPack" ${selected.size===pack.pick?'':'disabled'}>CONFIRM</button>
+      </div>`;
+    pushModal(pack.name.toUpperCase(), html);
+    document.querySelectorAll('.choice-item').forEach(el => el.onclick = () => {
+      const i = +el.dataset.i;
+      if (selected.has(i)) selected.delete(i);
+      else if (selected.size < pack.pick) selected.add(i);
+      popModal();
+      render();
+    });
+    document.getElementById('confirmPack').onclick = () => {
+      for (const i of selected) {
+        const id = pool[i];
+        if (pack.kind==='fkey') { addFKey(id); }
+        if (pack.kind==='cap') { assignFromPack(id); }
+        if (pack.kind==='chip') {
+          state.chips[id] = (state.chips[id]||0) + 1;
+          log(`Chip on [${id}] — now lvl ${state.chips[id]}`,'good');
+        }
+      }
+      popModal();
+      onDone && onDone();
+    };
+  }
+  function assignFromPack(capId) {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    letters.sort((a,b) => (state.letters[b]||0) - (state.letters[a]||0));
+    const L = letters[0] || 'E';
+    addKeycap(capId, L);
+  }
+  render();
+}
+
+// =============== MODAL STACK ===============
+const modalStack = [];
+function openModal(title, html) {
+  modalStack.length = 0;
+  modalStack.push({title,html});
+  applyTopModal();
+}
+function pushModal(title, html) {
+  modalStack.push({title,html});
+  applyTopModal();
+}
+function popModal() {
+  modalStack.pop();
+  if (modalStack.length) applyTopModal();
+  else closeModal();
+}
+function applyTopModal() {
+  const top = modalStack[modalStack.length-1];
+  if (!top) { closeModal(); return; }
+  document.getElementById('modalTitle').textContent = top.title;
+  document.getElementById('modalBody').innerHTML = top.html;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() {
+  modalStack.length = 0;
+  document.getElementById('modal').classList.remove('active');
+}
+
+// =============== STORY / DIALOGUES ===============
+function getMgrFlavor() {
+  const phase = state.day <= 5 ? 'early' : state.day <= 12 ? 'mid' : 'late';
+  const arr = MGR_FLAVOR[phase];
+  return state.manager.quote || arr[Math.floor(Math.random()*arr.length)];
+}
+
+function showStartDialogue() {
+  const html = `
+    <div class="dialogue">
+      <div class="speaker">— RECRUITER (cheerful)</div>
+      <div class="text">"Do you need money? <em>Yes</em>. Do you loooove typing? <em>Eh… kinda</em>. WELL — search no further!
+      Apply for a job at THE COMPANY in Tyorua and we'll hire you INSTANTLY!"</div>
+    </div>
+    <div class="dialogue warn">
+      <div class="speaker">— RECRUITER (whispering)</div>
+      <div class="text">"At this job, you produce words, for money! Just one thing — the Company's relationship with managers has not been... <em>dandy</em>. New manager almost every day. Pft. But beware — produce the right words, give the right amount of data… otherwise you get… uh… <em>fired</em>. <strong>Fired indeed.</strong>"</div>
+    </div>
+    <div class="dialogue lore">
+      <div class="speaker">— THE OFFICE</div>
+      <div class="text">A contract slides under your nose. <em>"Sign at the bottom, please."</em> You sign it without reading. A loud celebration noise. <strong>"WELCOME TO THE COMPANY, JEFF."</strong> The fine print mentions you can't quit. The smaller print mentions consequences for missed quotas. Day 1 begins.</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      <button class="btn good" id="contractBtn">START DAY 1</button>
+    </div>
+  `;
+  openModal('NEW EMPLOYEE — JEFF', html);
+  document.getElementById('contractBtn').onclick = () => {
+    closeModal();
+    log('Welcome to The Company, Jeff.','sys');
+    log(`Day 1 quota: ${state.quota}. Manager: ${state.manager.name}.`,'info');
+  };
+}
+
+function showStoryBeat(day) {
+  const beats = {
+    5: { title:'A NOTE ON YOUR DESK', text:'A folded note has appeared on your keyboard. It reads: "If you are reading this, you didn\'t make it. I\'m sorry. Don\'t look in the basement." It is dated yesterday.', cls:'warn' },
+    10: { title:'INTERCOM ANNOUNCEMENT', text:'STATIC. <em>"Attention typists. Word energy yields are below projections. Productivity will be... encouraged. That is all."</em> The intercom clicks off. Your keyboard feels warm.', cls:'bad' },
+    15: { title:'A CLASSIFIED MEMO', text:'Stapled to your monitor: PROJECT OVERFLOW — ENERGY HARVESTED 12,847 typist-equivalents. SUBJECT-JEFF: "performing adequately." Below that is a list of names. Most are crossed out.', cls:'bad' },
+    20: { title:'THE SYSTEM IS OVERLOADING', text:'You\'ve typed enough words to overload the harvest array. The walls hum. The lights flicker. There is a door at the end of the hallway that has never been there before. It is open.', cls:'good' }
+  };
+  const b = beats[day]; if (!b) return;
+  const html = `
+    <div class="dialogue ${b.cls||''}">
+      <div class="speaker">— ${b.title}</div>
+      <div class="text lore">${b.text}</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      <button class="btn" id="storyBtn">CONTINUE</button>
+    </div>
+  `;
+  pushModal('TYORUA — DAY ' + day, html);
+  document.getElementById('storyBtn').onclick = () => popModal();
+}
+
+function showFailDialogue() {
+  const html = `
+    <div class="dialogue bad">
+      <div class="speaker">— UPPER MANAGEMENT</div>
+      <div class="text">"Performance unsatisfactory. Footsteps approach your office door. EXTRACTION PROTOCOL INITIATED."</div>
+    </div>
+    <div class="dialogue lore">
+      <div class="text">You see other typists in tubes, wired to a humming machine. Their fingers twitch in unison. Your day ends here.</div>
+    </div>
+  `;
+  openModal('— TERMINATED —', html + '<div style="margin-top:14px;display:flex;justify-content:flex-end;"><button class="btn danger" id="endBtn">VIEW RESULTS</button></div>');
+  document.getElementById('endBtn').onclick = () => {
+    closeModal();
+    showEnding('failure');
+  };
+}
+
+function showEnding(type) {
+  document.getElementById('window').style.display = 'none';
+  const screen = document.getElementById('endingScreen');
+  const t = document.getElementById('endingTitle');
+  const txt = document.getElementById('endingText');
+  if (type==='failure') {
+    t.textContent = '— TERMINATED —';
+    t.className = 'ending-title bad';
+    txt.innerHTML = `Day ${state.day}. You failed quota.<br>The Company processes your paperwork. Your keyboard joins the others in the incinerator.<br><br>Final score: <strong style="color:var(--gold-text)">${state.score}</strong> / ${state.quota}.<br>Words typed: ${state.typedWordsThisDay.length}.<br>Cash on hand: $${state.money} (forfeit).`;
+  } else if (type==='escape') {
+    t.textContent = '— ESCAPED —';
+    t.className = 'ending-title';
+    t.style.color = 'var(--good)';
+    txt.innerHTML = `Day ${state.day}.<br>The harvest array overloaded. The door opened.<br>You walked out. David is waiting.<br><br>You don't look back.`;
+  } else if (type==='promotion') {
+    t.textContent = '— PROMOTED —';
+    t.className = 'ending-title';
+    txt.innerHTML = `You exceeded every quota. The executives offer you a desk on the upper floor.<br>You become a manager. You greet the new typist on Day 1. You smile reassuringly.<br>The cycle continues.`;
+  } else if (type==='transcend') {
+    t.textContent = '— TRANSCENDED —';
+    t.className = 'ending-title';
+    t.style.color = 'var(--purple)';
+    txt.innerHTML = `You collected every F-Key. Your consciousness merged with the word energy. You ARE the Company now.<br>It is unclear if this is good or bad.`;
+  }
+  screen.style.display = 'flex';
+}
+
+// =============== NEXT DAY ===============
+function nextDay() {
+  state.day++;
+
+  if (state.day > 25) return showEnding('escape');
+
+  state.manager = pickManagerForDay(state.day);
+
+  state.disabledLetter = null;
+  if (state.manager.id === 'kevin') {
+    const pool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(L => (state.letters[L]||0) > 0);
+    state.disabledLetter = pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+  }
+
+  state.score = 0;
+  state.quota = quotaForDay(state.day);
+  if (state.manager.id === 'clara') state.quota = Math.round(state.quota * 0.8);
+  if (state.manager.id === 'veronica') state.quota = Math.round(state.quota * 1.3);
+  state.turnsLeft = 6;
+  if (state.manager.id === 'dennis') state.turnsLeft -= 1;
+  state.flawless = true;
+  state.streak = 0;
+  state.typedWordsThisDay = [];
+  state.safeUsedThisRound = false;
+
+  log(`=== DAY ${state.day} ===`,'sys');
+  log(`Manager: ${state.manager.name} — ${state.manager.desc}`,'info');
+  if (state.manager.quote) log(`"${state.manager.quote}"`,'lore');
+  log(`Quota: ${state.quota}. Turns: ${state.turnsLeft}.`,'info');
+
+  if (state.storyTriggered[state.day] === false) {
+    state.storyTriggered[state.day] = true;
+    setTimeout(()=>showStoryBeat(state.day), 200);
+  }
+  if (state.fkeys.length >= Object.keys(F_KEYS).length) return showEnding('transcend');
+
+  if (hasFKey('inspected')) rollInspected();
+  renderAll();
+}
+
+// =============== INIT / FONT SELECT ===============
+function buildFontGrid() {
+  const grid = document.getElementById('fontGrid');
+  grid.innerHTML = '';
+  FONTS.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'font-card' + (f.unlocked?'':' locked');
+    card.innerHTML = `
+      <div class="fname">${f.unlocked?f.name:'???'}</div>
+      <div class="fdesc">${f.unlocked?f.desc:'Locked.'}</div>
+      <div class="flore">${f.unlocked?f.lore:''}</div>
+    `;
+    if (f.unlocked) card.addEventListener('click', () => {
+      document.querySelectorAll('.font-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('startBtn').dataset.fontId = f.id;
+    });
+    grid.appendChild(card);
+  });
+  document.getElementById('startBtn').addEventListener('click', () => {
+    const fid = document.getElementById('startBtn').dataset.fontId;
+    const font = FONTS.find(f=>f.id===fid);
+    if (!font) return;
+    startGame(font);
+  });
+}
+
+function startGame(font) {
+  state = defaultState();
+  state.font = font.id;
+  document.body.className = font.cls;
+
+  dealStartingLetters(50);
+  if (font.apply) font.apply();
+
+  state.manager = MANAGERS[0];
+  state.quota = quotaForDay(1);
+
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('window').style.display = 'grid';
+  document.getElementById('endingScreen').style.display = 'none';
+
+  document.getElementById('log').innerHTML = '';
+  log(`Font: ${font.name}.`,'sys');
+  log(`Day 1 begins. Quota: ${state.quota}.`,'info');
+  showStartDialogue();
+  renderAll();
+}
+
+// =============== KEYBOARD INPUT ===============
+function setupKeyboardInput() {
+  document.addEventListener('keydown', e => {
+    if (state?.gameOver) return;
+    if (modalStack.length) return;
+    const k = e.key;
+    if (k === 'CapsLock') { e.preventDefault(); handleCapsLock(); return; }
+    if (/^[a-zA-Z]$/.test(k)) {
+      // Physical shift key sets shiftActive for next letter only if caps lock is off
+      if (e.shiftKey && !state.capsLockActive) state.shiftActive = true;
+      handleKeyPress(k.toUpperCase());
+    } else if (k === 'Backspace') { e.preventDefault(); handleBackspace(); }
+    else if (k === 'Enter') { e.preventDefault(); submitWord(); }
+    else if (k === 'Escape') handleClear();
+  });
+}
+
+// =============== UI WIRING ===============
+function wireUI() {
+  document.getElementById('backspaceBtn').onclick = handleBackspace;
+  document.getElementById('clearBtn').onclick = handleClear;
+  document.getElementById('shiftBtn').onclick = handleShift;
+  document.getElementById('capsBtn').onclick = handleCapsLock;
+  document.getElementById('enterBtn').onclick = submitWord;
+  document.getElementById('endDayBtn').onclick = () => {
+    if (state.gameOver) return;
+    if (state.score < state.quota) {
+      if (!confirm('You are below quota. End the day anyway? (You will be FIRED.)')) return;
+    }
+    endDay();
+  };
+  document.getElementById('viewMgrBtn').onclick = () => showManagerInfo();
+  document.getElementById('viewChipsBtn').onclick = () => showChipsInfo();
+  document.getElementById('helpBtn').onclick = () => showHelp();
+  document.getElementById('menuBtn').onclick = () => showMenu();
+  document.getElementById('modalClose').onclick = closeModal;
+  document.getElementById('restartBtn').onclick = () => {
+    document.getElementById('endingScreen').style.display='none';
+    document.getElementById('titleScreen').style.display='flex';
+    document.getElementById('startBtn').disabled = true;
+    document.querySelectorAll('.font-card').forEach(c=>c.classList.remove('selected'));
+  };
+}
+
+function showManagerInfo() {
+  const m = state.manager;
+  const html = `
+    <div class="dialogue">
+      <div class="speaker">— ${m.name}</div>
+      <div class="text">${m.desc}</div>
+    </div>
+    <div class="dialogue lore">
+      <div class="text">"${getMgrFlavor()}"</div>
+    </div>
+    <div class="muted" style="margin-top:10px;font-size:11px;">
+      Managers are fired daily. Each new day brings a new one.
+    </div>
+  `;
+  openModal('CURRENT MANAGER', html);
+}
+
+function showChipsInfo() {
+  const entries = Object.entries(state.chips).filter(([,v])=>v>0).sort();
+  let html = '<div class="muted">Chips upgrade individual letter point values. Each chip doubles base points.</div>';
+  if (!entries.length) html += '<div class="muted" style="margin-top:8px;">No chips installed yet.</div>';
+  else {
+    html += '<div class="list" style="margin-top:8px;">';
+    entries.forEach(([L,lvl]) => {
+      html += `<div class="list-item chip"><div class="row"><div class="name">[${L}] — Lvl ${lvl}</div><div class="tag good">${Math.pow(2,lvl)} pts</div></div></div>`;
+    });
+    html += '</div>';
+  }
+  openModal('CHIPS', html);
+}
+
+function showHelp() {
+  const html = `
+    <div class="card"><h3>HOW TO PLAY</h3>
+      <div class="muted">Click letters or use your keyboard. Type a valid English word and press <strong>SUBMIT</strong> (or Enter).</div>
+      <div class="muted" style="margin-top:6px;">• <strong>Letters</strong> are consumed when you submit (valid OR invalid).</div>
+      <div class="muted">• Hit the <strong>quota</strong> by end of day to get paid and continue.</div>
+      <div class="muted">• Use <strong>Shift</strong> (one-shot) or <strong>Caps Lock</strong> for capitalised letters — worth x2 points.</div>
+      <div class="muted">• Spend money in the <strong>shop</strong> on chips (letter upgrades), F-keys (jokers), keycaps, or packs.</div>
+      <div class="muted">• <strong>Flawless</strong> day (no invalid words) = +$5.</div>
+    </div>
+    <div class="card" style="margin-top:8px;"><h3>FORMULAS</h3>
+      <div class="muted">Quota(n) = 100 × (1.2^n − 1)</div>
+      <div class="muted">Money = floor(score / 10) + 5 if flawless</div>
+    </div>
+    <div class="card" style="margin-top:8px;"><h3>WIN/LOSS</h3>
+      <div class="muted">Survive day 25 to escape. Collect ALL F-keys to transcend.</div>
+      <div class="muted">Fail quota = TERMINATED.</div>
+    </div>
+  `;
+  openModal('HELP — JEFF\'S GUIDE TO TYORUA', html);
+}
+
+function showMenu() {
+  const html = `
+    <div class="card">
+      <h3>RUN INFO</h3>
+      <div class="muted">Day ${state.day} | Score ${state.score}/${state.quota} | $${state.money} | Streak ${state.streak} | Words ${state.wordCount}</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn small" id="mAbandon">ABANDON RUN</button>
+      <button class="btn small ghost" onclick="document.getElementById('modalClose').click();">CLOSE</button>
+    </div>
+  `;
+  openModal('MENU', html);
+  document.getElementById('mAbandon').onclick = () => {
+    if (!confirm('Abandon this run? Progress will be lost.')) return;
+    closeModal();
+    showEnding('failure');
+  };
+}
+
+// =============== BOOT ===============
+buildFontGrid();
+setupKeyboardInput();
+wireUI();
+state = defaultState();
+</script>
+</body>
+</html>
